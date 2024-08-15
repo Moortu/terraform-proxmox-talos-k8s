@@ -1,21 +1,21 @@
-variable "cluster_name" {
+variable "talos_k8s_cluster_name" {
   description = "Name of the Talos Kubernetes cluster"
   type        = string
   default     = "talos-cluster"
 }
 
-variable "cluster_vip" {
+variable "talos_k8s_cluster_vip" {
   description = "Virtual IP of the Talos Kubernetes cluster"
   type        = string
 }
 
-variable "cluster_domain" {
+variable "talos_k8s_cluster_domain" {
   description = "Domain name of the Talos Kubernetes cluster"
   type        = string
   default     = "talos-cluster.local"
 }
 
-variable "cluster_endpoint_port" {
+variable "talos_k8s_cluster_endpoint_port" {
   description = "Port of the Kubernetes API endpoint"
   type        = number
   default     = 6443

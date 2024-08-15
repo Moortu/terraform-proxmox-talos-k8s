@@ -1,6 +1,43 @@
 locals {
-  talos_iso_image_location = "${var.talos_iso_destination_storage_pool}:iso/${replace(var.talos_iso_destination_filename, "%version%", var.talos_version)}"
-
+  # loop over all nodes, then within a node loop, loop over all control_planes of that node
+  # map the nodename and control_plane to an object. creating a list(control_plane, node_name)
+  # example structure:
+  # [{
+  #   "control_plane" = {
+  #     "boot_disk_size" = 100
+  #     "boot_disk_storage_pool" = "local-lvm"
+  #     "count" = 1
+  #     "cpu_cores" = 4
+  #     "cpu_sockets" = 1
+  #     "cpu_type" = "host"
+  #     "data_disks" = tolist([])
+  #     "mac_address" = "BC:24:12:26:58:D3"
+  #     "memory" = 14
+  #     "network_bridge" = "vmbr0"
+  #     "node_labels" = tomap({
+  #       "role" = "control-plane"
+  #     })
+  #   }
+  #   "node_name" = "pve-node-01"
+  # },
+  # {
+  #   "control_plane" = {
+  #     "boot_disk_size" = 100
+  #     "boot_disk_storage_pool" = "local-lvm"
+  #     "count" = 1
+  #     "cpu_cores" = 4
+  #     "cpu_sockets" = 1
+  #     "cpu_type" = "host"
+  #     "data_disks" = tolist([])
+  #     "mac_address" = "BC:24:12:9A:2F:42"
+  #     "memory" = 14
+  #     "network_bridge" = "vmbr0"
+  #     "node_labels" = tomap({
+  #       "role" = "control-plane"
+  #     })
+  #   }
+  #   "node_name" = "pve-node-02"
+  # }]
   vm_control_planes = flatten([
     for node_name, node in var.proxmox_nodes : [
       for control_plane in node.control_planes : {
@@ -13,34 +50,20 @@ locals {
   vm_control_planes_count = length(local.vm_control_planes)
 }
 
-# see https://registry.terraform.io/providers/bpg/proxmox/0.62.0/docs/resources/virtual_environment_file
-# this keeps bitching about the file already exists... i know, just skip it then
-# resource "proxmox_virtual_environment_file" "talos-iso" {
-#   content_type = "iso"
-#   datastore_id = var.talos_iso_destination_storage_pool
-#   node_name    = var.talos_iso_destination_server != "" ? var.talos_iso_destination_server : keys(var.proxmox_nodes)[0]
-#   overwrite = false
-
-#   source_file {
-#     path      = replace(var.talos_iso_download_url, "%version%", var.talos_version)
-#     file_name = replace(var.talos_iso_destination_filename, "%version%", var.talos_version)
-#   }
+# # see https://registry.terraform.io/providers/bpg/proxmox/latest/docs/resources/virtual_environment_download_file
+# resource "proxmox_virtual_environment_download_file" "talos-iso" {
+#   content_type      = "iso"
+#   datastore_id      = var.talos_iso_destination_storage_pool
+#   file_name         = replace(var.talos_iso_destination_filename, "%version%", var.talos_version)
+#   node_name         = var.talos_iso_destination_server != "" ? var.talos_iso_destination_server : keys(var.proxmox_nodes)[0]
+#   overwrite         = false
+#   url               = var.talos_iso_download_url
 # }
-
-# see https://registry.terraform.io/providers/bpg/proxmox/latest/docs/resources/virtual_environment_download_file
-resource "proxmox_virtual_environment_download_file" "talos-iso" {
-  content_type      = "iso"
-  datastore_id      = var.talos_iso_destination_storage_pool
-  file_name         = replace(var.talos_iso_destination_filename, "%version%", var.talos_version)
-  node_name         = var.talos_iso_destination_server != "" ? var.talos_iso_destination_server : keys(var.proxmox_nodes)[0]
-  overwrite         = false
-  url               = var.talos_iso_download_url
-}
 
 # see https://registry.terraform.io/providers/ivoronin/macaddress/latest/docs/resources/macaddress
 resource "macaddress" "talos-control-plane" {
   # see https://developer.hashicorp.com/terraform/language/meta-arguments/count
-  count = length(local.vm_control_planes)
+  count = local.vm_control_planes_count
 }
 
 # see https://registry.terraform.io/providers/bpg/proxmox/0.62.0/docs/resources/virtual_environment_vm

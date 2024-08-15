@@ -1,6 +1,7 @@
 variable "talos_iso_download_url" {
   description = "Location to download the Talos iso image from"
   type        = string
+  # requires secure boot and the qemu-guest-agent extension to be added through the talos linux image factory
   # %version% is replaced by talos_version
   default     = "https://github.com/siderolabs/talos/releases/download/v%version%/metal-amd64.iso"
 }
