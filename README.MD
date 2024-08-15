@@ -16,7 +16,7 @@ How to use:
 #Create cluster
 terraform init -upgrade
 terraform plan #plan is optional
-terraform apply -auto-approve
+terraform apply -auto-approve #auto-approve if you don't want to check the changes
 
 #Destory cluster
 terraform destroy -auto-approve
@@ -26,7 +26,10 @@ terraform destroy -auto-approve
 terraform apply -auto-approve
 ```
 
-Example config
+Through the config you can specify what vm's you want to run on what nodes and with what resources with high specificity.
+For now the worker and control plane config is basically the same, but this might change in the future.
+
+Example config.auto.tfvars
 - 3 promox nodes
 - node 1 has only 1 control_plane
 - node 2 has 1 control_plane and 2 workers

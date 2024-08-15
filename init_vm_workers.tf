@@ -58,6 +58,7 @@ resource "macaddress" "talos-worker-node" {
   count = local.vm_control_planes_count
 }
 
+# see https://registry.terraform.io/providers/bpg/proxmox/0.62.0/docs/resources/virtual_environment_vm
 resource "proxmox_virtual_environment_vm" "talos-worker-node" {
   depends_on = [
     proxmox_virtual_environment_download_file.talos-iso,

@@ -1,3 +1,4 @@
+# see https://developer.hashicorp.com/terraform/language/resources/terraform-data
 resource "terraform_data" "inline-manifests" {
   depends_on = [
     data.external.kustomize_talos-ccm,
@@ -26,6 +27,7 @@ resource "terraform_data" "inline-manifests" {
   ]
 }
 
+# see https://registry.terraform.io/providers/siderolabs/talos/0.6.0-alpha.1/docs/resources/machine_configuration_apply
 resource "talos_machine_configuration_apply" "control-planes" {
   depends_on = [
     data.external.mac-to-ip,
@@ -57,6 +59,7 @@ resource "talos_machine_configuration_apply" "control-planes" {
   ]
 }
 
+# see https://registry.terraform.io/providers/siderolabs/talos/0.6.0-alpha.1/docs/resources/machine_configuration_apply
 resource "talos_machine_configuration_apply" "worker-nodes" {
   depends_on = [
     data.external.mac-to-ip,
@@ -97,6 +100,7 @@ resource "talos_machine_configuration_apply" "worker-nodes" {
   )
 }
 
+# see https://registry.terraform.io/providers/siderolabs/talos/0.6.0-alpha.1/docs/resources/machine_bootstrap
 resource "talos_machine_bootstrap" "this" {
   depends_on = [
     talos_machine_configuration_apply.control-planes,
@@ -106,6 +110,8 @@ resource "talos_machine_bootstrap" "this" {
   client_configuration = talos_machine_secrets.this.client_configuration
   node                 = cidrhost(var.network_cidr, var.control_plane_first_ip)
 }
+
+# see https://registry.terraform.io/providers/siderolabs/talos/0.6.0-alpha.1/docs/data-sources/cluster_health
 
 # unfortunately, this does not really check, wait and retry for the cluster to
 # be ready but instead errors and fails when unable to connect to nodes that
