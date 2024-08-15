@@ -13,11 +13,13 @@ locals {
 }
 
 // see https://registry.terraform.io/providers/siderolabs/talos/0.6.0-alpha.1/docs/resources/machine_secrets
-resource "talos_machine_secrets" "talos" {}
+resource "talos_machine_secrets" "talos" {
+  talos_version = "v${var.talos_version}"
+}
 
 data "talos_client_configuration" "this" {
   //noinspection HILUnresolvedReference
-  client_configuration = talos_machine_secrets.this.client_configuration
+  client_configuration = talos_machine_secrets.talos.client_configuration
   cluster_name         = var.talos_k8s_cluster_name
   endpoints            = concat([var.talos_k8s_cluster_vip], [
     for i in range(
