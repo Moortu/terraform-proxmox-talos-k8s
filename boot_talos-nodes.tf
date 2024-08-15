@@ -112,6 +112,7 @@ resource "talos_machine_bootstrap" "this" {
 }
 
 # see https://registry.terraform.io/providers/siderolabs/talos/0.6.0-alpha.1/docs/data-sources/cluster_health
+# TODO check and fix
 
 # unfortunately, this does not really check, wait and retry for the cluster to
 # be ready but instead errors and fails when unable to connect to nodes that

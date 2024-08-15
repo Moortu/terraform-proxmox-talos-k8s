@@ -29,6 +29,8 @@ terraform apply -auto-approve
 Through the config you can specify what vm's you want to run on what nodes and with what resources with high specificity.
 For now the worker and control plane config is basically the same, but this might change in the future.
 
+most variables in .tfvars are hoverable for description, but for the complex ones like proxmox_nodes you have to look it up yourself
+
 Example config.auto.tfvars
 - 3 promox nodes
 - node 1 has only 1 control_plane
@@ -49,7 +51,7 @@ talos_iso_destination_storage_pool = "local-lvm"
 
 talos_machine_install_image_url = "factory.talos.dev/installer-secureboot/ce4c980550dd2ab1b17bbf2b08801c7eb59418eafe8f279833297925d67c7515:v%version%"
 
-
+# check vars-proxmox.tf for descriptions of each variable
 proxmox_nodes = {
   pve-01 = {
     control_planes = [{

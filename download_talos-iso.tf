@@ -2,7 +2,7 @@ locals {
   talos_iso_image_location = "${var.talos_iso_destination_storage_pool}:iso/${replace(var.talos_iso_destination_filename, "%version%", var.talos_version)}"
 }
 
-# replace with talos_image factory_urls and talos_image_factory_schematic 
+# TODO replace with talos_image factory_urls and talos_image_factory_schematic 
 # https://registry.terraform.io/providers/siderolabs/talos/0.6.0-alpha.1/docs/data-sources/image_factory_urls
 # https://registry.terraform.io/providers/siderolabs/talos/0.6.0-alpha.1/docs/resources/image_factory_schematic
 

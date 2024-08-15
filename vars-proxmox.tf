@@ -26,9 +26,11 @@ variable "proxmox_nodes" {
       node_labels   = optional(map(string), {})
       # The name of the network bridge on the Proxmox host
       network_bridge  = optional(string, "vmbr0")
-      # Predefined mac address to be used by the vm
+
+      #TODO make mac_address work with count
+      # Predefined mac address to be used by the vm, does not work with count
       mac_address = optional(string)
-      # Number of worker nodes to deploy on the target server
+      # Number of worker nodes to deploy on the target server, does not work with mac_address
       count = optional(number, 1)
       # The type of the CPU
       cpu_type = optional(string, "host")
@@ -57,9 +59,10 @@ variable "proxmox_nodes" {
       node_labels   = optional(map(string), {})
       # The name of the network bridge on the Proxmox host
       network_bridge  = optional(string, "vmbr0")
-      # Predefined mac address to be used by the vm
+      #TODO make mac_address work with count
+      # Predefined mac address to be used by the vm, does not work with count
       mac_address = optional(string)
-      # Number of worker nodes to deploy on the target server
+      # Number of worker nodes to deploy on the target server, does not work with mac_address
       count         = optional(number, 1)
       # The type of the CPU
       cpu_type = optional(string, "host")
