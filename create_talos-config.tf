@@ -24,7 +24,7 @@ data "talos_client_configuration" "this" {
   endpoints            = concat([var.talos_k8s_cluster_vip], [
     for i in range(
       var.control_plane_first_ip, var.control_plane_first_ip + local.vm_control_planes_count
-    ) : cidrhost(var.network_cidr, i)
+    ) : cidrhost(var.network_cidr, i) #got it from dhcp, how todo? get ips from mac-to-ip?
   ])
 }
 
