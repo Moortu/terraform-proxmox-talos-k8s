@@ -1,7 +1,14 @@
 locals {
+  depends_on = [ 
+    proxmox_virtual_environment_vm.talos-control-plane
+  ]
+
   cluster_endpoint = "https://${var.talos_k8s_cluster_domain}:${var.talos_k8s_cluster_endpoint_port}"
   storage_mnt      = "/var/mnt/storage"
 
+  #TODO, use the network_gateway to match 3 parts of the ip address to make 75% sure it's the right one
+  flattened_ips = flatten(flatten([for cp in proxmox_virtual_environment_vm.talos-control-plane : cp.ipv4_addresses]))
+  control_plane_ip-addresses = [for ip in local.flattened_ips : ip if ip != "127.0.0.1"]
   # default talos_machine_configuration values
   talos_mc_defaults = {
     topology_region     = var.talos_k8s_cluster_name,
@@ -12,20 +19,17 @@ locals {
   }
 }
 
-// see https://registry.terraform.io/providers/siderolabs/talos/0.6.0-alpha.1/docs/resources/machine_secrets
+# see https://registry.terraform.io/providers/siderolabs/talos/0.6.0-alpha.1/docs/resources/machine_secrets
 resource "talos_machine_secrets" "talos" {
   talos_version = "v${var.talos_version}"
 }
 
+# see https://registry.terraform.io/providers/siderolabs/talos/0.6.0-alpha.1/docs/data-sources/client_configuration
 data "talos_client_configuration" "this" {
-  //noinspection HILUnresolvedReference
+  depends_on = [ local.flattened_ips, local.control_plane_ip-addresses ]
   client_configuration = talos_machine_secrets.talos.client_configuration
   cluster_name         = var.talos_k8s_cluster_name
-  endpoints            = concat([var.talos_k8s_cluster_vip], [
-    for i in range(
-      var.control_plane_first_ip, var.control_plane_first_ip + local.vm_control_planes_count
-    ) : cidrhost(var.network_cidr, i) #got it from dhcp, how todo? get ips from mac-to-ip?
-  ])
+  endpoints            = concat([var.talos_k8s_cluster_vip], [control_plane_ip-addresses])
 }
 
 # see https://registry.terraform.io/providers/siderolabs/talos/0.6.0-alpha.1/docs/data-sources/machine_configuration

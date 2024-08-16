@@ -61,7 +61,7 @@ resource "macaddress" "talos-worker-node" {
 # see https://registry.terraform.io/providers/bpg/proxmox/0.62.0/docs/resources/virtual_environment_vm
 resource "proxmox_virtual_environment_vm" "talos-worker-node" {
   depends_on = [
-    proxmox_virtual_environment_download_file.talos-iso,
+    # proxmox_virtual_environment_download_file.talos-iso,
     macaddress.talos-worker-node
   ]
   #index all workers, map the index to a worker
@@ -96,6 +96,7 @@ resource "proxmox_virtual_environment_vm" "talos-worker-node" {
 
   vga {
     type = "virtio"
+    memory = "256"
   }
 
   cdrom {

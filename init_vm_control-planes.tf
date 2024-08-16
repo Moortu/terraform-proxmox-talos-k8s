@@ -69,7 +69,7 @@ resource "macaddress" "talos-control-plane" {
 # see https://registry.terraform.io/providers/bpg/proxmox/0.62.0/docs/resources/virtual_environment_vm
 resource "proxmox_virtual_environment_vm" "talos-control-plane" {
   depends_on = [
-    proxmox_virtual_environment_download_file.talos-iso,
+    # proxmox_virtual_environment_download_file.talos-iso,
     macaddress.talos-control-plane
   ]
   
@@ -104,6 +104,7 @@ resource "proxmox_virtual_environment_vm" "talos-control-plane" {
 
   vga {
     type = "virtio"
+    memory = "256"
   }
 
   cdrom {

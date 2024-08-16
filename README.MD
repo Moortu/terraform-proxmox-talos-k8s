@@ -31,6 +31,8 @@ by default it uses random mac_addresses + dhcp
 - if you turn dhcp off, network_dhcp = false, then it will take the network_cidr + control_plane_first_ip/worker_first_ip and generate ip's from there on.
 - if you specify a mac_address for a control_plane/worker, then that will be used instead of a random generated one.
 
+in create_talos-config, the qemu agent is used to retrieve all ipaddresses from control-planes, if you have more then 1 interface setup, it might break something
+
 Through the config you can specify what vm's you want to run on what nodes and with what resources with high specificity.
 For now the worker and control plane config is basically the same, but this might change in the future.
 
