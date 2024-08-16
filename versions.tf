@@ -20,30 +20,23 @@ variable "k8s_version" {
     default     = "1.30.3"
 }
 
-# variable "talos_ccm_version" {
-#   # https://github.com/siderolabs/talos-cloud-controller-manager/releases
-#   description = "Talos Cloud Controller Manager version to use"
-#   type        = string
-#   default     = "1.6.0"
-# }
+variable "cilium_version" {
+  # https://helm.cilium.io/
+  description = "Cilium Helm version to use"
+  type        = string
+  default     = "1.16.1"
+}
 
-# variable "cilium_version" {
-#   # https://helm.cilium.io/
-#   description = "Cilium Helm version to use"
-#   type        = string
-#   default     = "1.15.6"
-# }
+variable "argocd_version" {
+  # https://github.com/argoproj/argo-cd/releases
+  description = "ArgoCD version to use"
+  type        = string
+  default     = "2.11.4"
+}
 
-# variable "argocd_version" {
-#   # https://github.com/argoproj/argo-cd/releases
-#   description = "ArgoCD version to use"
-#   type        = string
-#   default     = "2.11.4"
-# }
-
-# variable "metrics_server_version" {
-#   # https://github.com/kubernetes-sigs/metrics-server/releases
-#   description = "Kubernetes Metrics Server version to use"
-#   type        = string
-#   default     = "0.7.1"
-# }
+variable "metrics_server_version" {
+  # https://github.com/kubernetes-sigs/metrics-server/releases
+  description = "Kubernetes Metrics Server version to use"
+  type        = string
+  default     = "0.7.1"
+}

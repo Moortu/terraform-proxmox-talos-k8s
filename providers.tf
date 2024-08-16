@@ -24,13 +24,17 @@ terraform {
       source  = "hashicorp/helm"
       version = "2.15.0"
     }
-    synclocal = {
-      source  = "justenwalker/synclocal"
-      version = ">= 0.0.2"
-    }
+    # see https://registry.terraform.io/providers/ivoronin/macaddress
+    # see https://github.com/ivoronin/terraform-provider-macaddress
     macaddress = {
       source  = "ivoronin/macaddress"
       version = "0.3.2"
+    }
+    # see https://registry.terraform.io/providers/kbst/kustomization/latest/docs
+    # see https://github.com/kbst/terraform-provider-kustomization
+    kustomization = {
+      source  = "kbst/kustomization"
+      version = "0.9.0"
     }
   }
   required_version = ">= 0.14"

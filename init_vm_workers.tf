@@ -1,61 +1,22 @@
 locals {
-  # loop over all nodes, then within a node loop, loop over all workers of that node
-  # map the nodename and worker to an object. creating a list(worker, node_name)
-  # example structure:
-  # [{
-  #   "worker" = {
-  #     "boot_disk_size" = 100
-  #     "boot_disk_storage_pool" = "local-lvm"
-  #     "count" = 1
-  #     "cpu_cores" = 4
-  #     "cpu_sockets" = 1
-  #     "cpu_type" = "host"
-  #     "data_disks" = tolist([])
-  #     "mac_address" = "BC:24:11:26:58:D3"
-  #     "memory" = 14
-  #     "network_bridge" = "vmbr0"
-  #     "node_labels" = tomap({
-  #       "role" = "worker"
-  #     })
-  #   }
-  #   "node_name" = "pve-node-01"
-  # },
-  # {
-  #   "worker" = {
-  #     "boot_disk_size" = 100
-  #     "boot_disk_storage_pool" = "local-lvm"
-  #     "count" = 1
-  #     "cpu_cores" = 4
-  #     "cpu_sockets" = 1
-  #     "cpu_type" = "host"
-  #     "data_disks" = tolist([])
-  #     "mac_address" = "BC:24:11:9A:2F:42"
-  #     "memory" = 14
-  #     "network_bridge" = "vmbr0"
-  #     "node_labels" = tomap({
-  #       "role" = "worker"
-  #     })
-  #   }
-  #   "node_name" = "pve-node-02"
-  # }]
+
   vm_workers = flatten([
     for node_name, node in var.proxmox_nodes : [
-      for worker in node.workers : {
+      for worker in node.workers : merge(worker, {
         node_name = node_name
-        worker = worker
-      }
+      })
     ]
   ])
+
+  workers_map = { for wn in local.vm_workers : wn.name => wn }
 
   vm_worker_count = length(local.vm_workers)
 }
 
-
-
 # see https://registry.terraform.io/providers/ivoronin/macaddress/latest/docs/resources/macaddress
 resource "macaddress" "talos-worker-node" {
   # see https://developer.hashicorp.com/terraform/language/meta-arguments/count
-  count = local.vm_control_planes_count
+  count = local.vm_worker_count
 }
 
 # see https://registry.terraform.io/providers/bpg/proxmox/0.62.0/docs/resources/virtual_environment_vm
@@ -67,7 +28,7 @@ resource "proxmox_virtual_environment_vm" "talos-worker-node" {
   #index all workers, map the index to a worker
   for_each = { for idx, wk in local.vm_workers : idx => wk }
 
-  name            = "${var.worker_node_name_prefix}-${each.key + 1}"
+  name            = each.value.name
   vm_id           = each.key + var.worker_node_first_id
   node_name       = each.value.node_name
   tags            = sort(["talos", "worker", "terraform"])
@@ -105,22 +66,22 @@ resource "proxmox_virtual_environment_vm" "talos-worker-node" {
   }
 
   cpu {
-    type    = each.value.worker.cpu_type
-    sockets = each.value.worker.cpu_sockets
-    cores   = each.value.worker.cpu_cores
+    type    = each.value.cpu_type
+    sockets = each.value.cpu_sockets
+    cores   = each.value.cpu_cores
     units   = 100
   }
 
   memory {
-    dedicated = each.value.worker.memory*1024
-    floating = each.value.worker.memory*1024
+    dedicated = each.value.memory*1024
+    floating = each.value.memory*1024
   }
 
   network_device {
     enabled     = true
     model       = "virtio"
-    bridge      = each.value.worker.network_bridge
-    mac_address = each.value.worker.mac_address != null ? each.value.worker.mac_address : macaddress.talos-control-plane[each.key].address
+    bridge      = each.value.network_bridge
+    mac_address = each.value.mac_address != null ? each.value.mac_address : macaddress.talos-control-plane[each.key].address
     firewall    = false
   }
 
@@ -130,8 +91,8 @@ resource "proxmox_virtual_environment_vm" "talos-worker-node" {
 
   disk {
     interface    = "virtio0"
-    size         = each.value.worker.boot_disk_size
-    datastore_id = each.value.worker.boot_disk_storage_pool
+    size         = each.value.boot_disk_size
+    datastore_id = each.value.boot_disk_storage_pool
     iothread     = true
     ssd          = true
     discard      = "on"
@@ -152,8 +113,4 @@ resource "proxmox_virtual_environment_vm" "talos-worker-node" {
   #     backup       = false
   #   }
   # }
-}
-
-output "talos_worker_node_mac_addrs" {
-  value = macaddress.talos-worker-node
 }

@@ -1,60 +1,32 @@
-# see https://developer.hashicorp.com/terraform/language/resources/terraform-data
-resource "terraform_data" "inline-manifests" {
-  depends_on = [
-    data.external.kustomize_talos-ccm,
-    data.external.kustomize_cilium,
-  ]
-
-  input = [
-    {
-      # required, prevents certificate errors
-      name     = "talos-ccm"
-      contents = data.external.kustomize_talos-ccm.result.manifests
-    },
-    {
-      # required, is used as CNI and is needed for Talos to report nodes as ready
-      name     = "cilium"
-      contents = data.external.kustomize_cilium.result.manifests
-    },
-    {
-      name     = "cilium-bgp-peering-policy"
-      contents = templatefile("${path.module}/manifests/cilium/bgp-peering-policy.yaml.tpl", {
-        cilium_asn = var.cilium_asn,
-        router_ip  = var.router_ip != "" ? var.router_ip : var.network_gateway,
-        router_asn = var.router_asn,
-      })
-    }
-  ]
-}
 
 # see https://registry.terraform.io/providers/siderolabs/talos/0.6.0-alpha.1/docs/resources/machine_configuration_apply
 resource "talos_machine_configuration_apply" "control-planes" {
   depends_on = [
-    data.external.mac-to-ip,
     data.talos_machine_configuration.cp,
-    terraform_data.inline-manifests,
+    local.control-planes_network
   ]
   for_each = {
-    for i, x in local.vm_control_planes : i => x
+    for idx, cp in local.control-planes_network : idx => cp
   }
 
-  client_configuration        = talos_machine_secrets.this.client_configuration
+  client_configuration        = talos_machine_secrets.talos.client_configuration
   machine_configuration_input = data.talos_machine_configuration.cp.machine_configuration
 
-  node = data.external.mac-to-ip.result[macaddress.talos-control-plane[each.key].address]
+  node = each.value.vm_name
+  endpoint = each.value.ip
 
   config_patches = [
-    templatefile("${path.module}/talos-config/control-plane.yaml.tpl", {
-      topology_zone     = each.value,
+    templatefile("${path.module}/talos-config/control-plane.yaml.tftpl", {
+      topology_zone     = each.value.node_name,
       cluster_domain    = var.talos_k8s_cluster_domain,
-      cluster_endpoint  = local.cluster_endpoint,
-      network_interface = "enx${lower(replace(macaddress.talos-control-plane[each.key].address, ":", ""))}",
+      cluster_endpoint  = local.talos_k8s_cluster_endpoint,
+      network_interface = each.value.network_interface_name,
       network_ip_prefix = var.network_ip_prefix,
       network_gateway   = var.network_gateway,
-      hostname          = "${var.control_plane_name_prefix}-${each.key + 1}"
-      ipv4_local        = cidrhost(var.network_cidr, each.key + var.control_plane_first_ip),
+      hostname          = each.value.vm_name,
+      ipv4_local        = each.value.ip,
       ipv4_vip          = var.talos_k8s_cluster_vip,
-      inline_manifests  = jsonencode(terraform_data.inline-manifests.output),
+      inline_manifests  = "", #jsonencode(terraform_data.inline-manifests.output)
     }),
   ]
 }
@@ -62,42 +34,43 @@ resource "talos_machine_configuration_apply" "control-planes" {
 # see https://registry.terraform.io/providers/siderolabs/talos/0.6.0-alpha.1/docs/resources/machine_configuration_apply
 resource "talos_machine_configuration_apply" "worker-nodes" {
   depends_on = [
-    data.external.mac-to-ip,
     data.talos_machine_configuration.wn,
+    local.workers_network
   ]
   for_each = {
-    for i, x in local.vm_worker_count : i => x
+    for idx, wn in local.workers_network : idx => wn
   }
 
-  client_configuration        = talos_machine_secrets.this.client_configuration
+  client_configuration        = talos_machine_secrets.talos.client_configuration
   machine_configuration_input = data.talos_machine_configuration.wn.machine_configuration
 
-  node = data.external.mac-to-ip.result[macaddress.talos-worker-node[each.key].address]
+  node = each.value.vm_name
+  endpoint = each.value.ip
 
-  config_patches = concat([
-    templatefile("${path.module}/talos-config/worker-node.yaml.tpl", {
-      topology_zone     = each.value.target_server,
-      cluster_domain    = var.talos_k8s_cluster_domain,
-      network_interface = "enx${lower(replace(macaddress.talos-worker-node[each.key].address, ":", ""))}",
-      network_ip_prefix = var.network_ip_prefix,
-      network_gateway   = var.network_gateway,
-      hostname          = "${var.worker_node_name_prefix}-${each.key + 1}"
-      ipv4_local        = cidrhost(var.network_cidr, each.key + var.worker_node_first_ip),
-      ipv4_vip          = var.talos_k8s_cluster_vip,
-    }),
-    templatefile("${path.module}/talos-config/node-labels.yaml.tpl", {
-      node_labels = jsonencode(each.value.node_labels),
-    })
-  ],
-    [
-      for disk in each.value.data_disks : templatefile(
-      "${path.module}/talos-config/worker-node-disk.yaml.tpl",
-      {
-        disk_device = "/dev/${disk.device_name}",
-        mount_point = disk.mount_point,
-      })
-    ]
-  )
+  # config_patches = concat([
+  #   templatefile("${path.module}/talos-config/worker-node.yaml.tftpl", {
+  #     topology_zone     = each.value.target_server,
+  #     cluster_domain    = var.talos_k8s_cluster_domain,
+  #     network_interface = each.value.network_interface_name,
+  #     network_ip_prefix = var.network_ip_prefix,
+  #     network_gateway   = var.network_gateway,
+  #     hostname          = each.value.vm_name,
+  #     ipv4_local        = each.value.ip,
+  #     ipv4_vip          = var.talos_k8s_cluster_vip,
+  #   }),
+  #   templatefile("${path.module}/talos-config/node-labels.yaml.tftpl", {
+  #     node_labels = jsonencode(each.value.node_labels),
+  #   })
+  # ],
+  #   [
+  #     for disk in each.value.data_disks : templatefile(
+  #     "${path.module}/talos-config/worker-node-disk.yaml.tftpl",
+  #     {
+  #       disk_device = "/dev/${disk.device_name}",
+  #       mount_point = disk.mount_point,
+  #     })
+  #   ]
+  # )
 }
 
 # see https://registry.terraform.io/providers/siderolabs/talos/0.6.0-alpha.1/docs/resources/machine_bootstrap
@@ -107,8 +80,8 @@ resource "talos_machine_bootstrap" "this" {
     talos_machine_configuration_apply.worker-nodes
   ]
 
-  client_configuration = talos_machine_secrets.this.client_configuration
-  node                 = cidrhost(var.network_cidr, var.control_plane_first_ip)
+  client_configuration = talos_machine_secrets.talos.client_configuration
+  node                 = talos_machine_configuration_apply.control-planes[0].node
 }
 
 # see https://registry.terraform.io/providers/siderolabs/talos/0.6.0-alpha.1/docs/data-sources/cluster_health
