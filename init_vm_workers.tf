@@ -14,16 +14,16 @@ locals {
 }
 
 # see https://registry.terraform.io/providers/ivoronin/macaddress/latest/docs/resources/macaddress
-resource "macaddress" "talos-worker-node" {
+resource "macaddress" "talos-worker" {
   # see https://developer.hashicorp.com/terraform/language/meta-arguments/count
   count = local.vm_worker_count
 }
 
 # see https://registry.terraform.io/providers/bpg/proxmox/0.62.0/docs/resources/virtual_environment_vm
-resource "proxmox_virtual_environment_vm" "talos-worker-node" {
+resource "proxmox_virtual_environment_vm" "talos-worker-vm" {
   depends_on = [
-    # proxmox_virtual_environment_download_file.talos-iso,
-    macaddress.talos-worker-node
+    proxmox_virtual_environment_download_file.talos-iso,
+    macaddress.talos-worker
   ]
   #index all workers, map the index to a worker
   for_each = { for idx, wk in local.vm_workers : idx => wk }
@@ -81,7 +81,7 @@ resource "proxmox_virtual_environment_vm" "talos-worker-node" {
     enabled     = true
     model       = "virtio"
     bridge      = each.value.network_bridge
-    mac_address = each.value.mac_address != null ? each.value.mac_address : macaddress.talos-control-plane[each.key].address
+    mac_address = each.value.mac_address != null ? each.value.mac_address : macaddress.talos-worker[each.key].address
     firewall    = false
   }
 
@@ -114,3 +114,30 @@ resource "proxmox_virtual_environment_vm" "talos-worker-node" {
   #   }
   # }
 }
+
+# locals {
+#   workers-network = [for wn in proxmox_virtual_environment_vm.talos-worker-vm : {
+#     type                   = "worker"
+#     node_name              = wn.node_name
+#     vm_name                = wn.name
+#     vm_id                  = wn.vm_id
+#     network_interface_name = element(wn.network_interface_names, index(wn.mac_addresses, wn.network_device[0].mac_address))
+#     mac_address            = wn.network_device[0].mac_address
+#     ip                     = element(wn.ipv4_addresses, index(wn.mac_addresses, wn.network_device[0].mac_address))[0]
+#   }]
+# }
+
+# output "workers-network" {
+#   depends_on = [ 
+#     proxmox_virtual_environment_vm.talos-worker-vm
+#    ]
+#   value = [for wn in proxmox_virtual_environment_vm.talos-worker-vm : {
+#     type                   = "worker"
+#     node_name              = wn.node_name
+#     vm_name                = wn.name
+#     vm_id                  = wn.vm_id
+#     network_interface_name = element(wn.network_interface_names, index(wn.mac_addresses, wn.network_device[0].mac_address))
+#     mac_address            = wn.network_device[0].mac_address
+#     ip                     = element(wn.ipv4_addresses, index(wn.mac_addresses, wn.network_device[0].mac_address))[0]
+#   }]
+# }

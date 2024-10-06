@@ -1,9 +1,24 @@
+# resource "terraform_data" "inline-manifests" {
+#   depends_on = [
+#     data.external.kustomize_cilium,
+#   ]
 
-# see https://registry.terraform.io/providers/siderolabs/talos/0.6.0-alpha.1/docs/resources/machine_configuration_apply
+#   input = [
+#     {
+#       # required, is used as CNI and is needed for Talos to report nodes as ready
+#       name     = "cilium"
+#       contents = data.external.kustomize_cilium.result.manifests
+#     }
+#   ]
+# }
+
+
+# see https://registry.terraform.io/providers/siderolabs/talos/0.6.0/docs/resources/machine_configuration_apply
 resource "talos_machine_configuration_apply" "control-planes" {
   depends_on = [
     data.talos_machine_configuration.cp,
-    local.control-planes_network
+    proxmox_virtual_environment_download_file.talos-iso
+    # terraform_data.inline-manifests
   ]
   for_each = {
     for idx, cp in local.control-planes_network : idx => cp
@@ -26,7 +41,7 @@ resource "talos_machine_configuration_apply" "control-planes" {
       hostname          = each.value.vm_name,
       ipv4_local        = each.value.ip,
       ipv4_vip          = var.talos_k8s_cluster_vip,
-      inline_manifests  = "", #jsonencode(terraform_data.inline-manifests.output)
+      inline_manifests  = "" #jsonencode(terraform_data.inline-manifests.output)
     }),
   ]
 }
@@ -95,7 +110,7 @@ resource "talos_machine_bootstrap" "this" {
 #   depends_on = [null_resource.talos-cluster-up]
 #
 #   client_configuration = talos_machine_secrets.this.client_configuration
-#   endpoints            = [for i, mac in macaddress.talos-control-plane : data.external.mac-to-ip.result[mac.address]]
+#   endpoints            = [for i, mac in macaddress.talos-control-plane: data.external.mac-to-ip.result[mac.address]]
 #   control_plane_nodes  = [for i, mac in macaddress.talos-control-plane : data.external.mac-to-ip.result[mac.address]]
-#   worker_nodes         = [for i, mac in macaddress.talos-worker-node : data.external.mac-to-ip.result[mac.address]]
+#   worker_nodes         = [for i, mac in macaddress.talos-worker : data.external.mac-to-ip.result[mac.address]]
 # }

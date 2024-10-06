@@ -19,9 +19,9 @@ resource "macaddress" "talos-control-plane" {
 }
 
 # see https://registry.terraform.io/providers/bpg/proxmox/0.62.0/docs/resources/virtual_environment_vm
-resource "proxmox_virtual_environment_vm" "talos-control-plane" {
+resource "proxmox_virtual_environment_vm" "talos-control-plane-vm" {
   depends_on = [
-    # proxmox_virtual_environment_download_file.talos-iso,
+    proxmox_virtual_environment_download_file.talos-iso,
     macaddress.talos-control-plane
   ]
 
@@ -115,4 +115,30 @@ resource "proxmox_virtual_environment_vm" "talos-control-plane" {
   # }
 }
 
+# locals {
+#   control-planes-network = [for idx, cp in proxmox_virtual_environment_vm.talos-control-plane-vm : {
+#     type                   = "control"
+#     node_name              = cp.node_name
+#     vm_name                = cp.name
+#     vm_id                  = cp.vm_id
+#     network_interface_name = element(cp.network_interface_names, index(cp.mac_addresses, cp.network_device[0].mac_address))
+#     mac_address            = cp.network_device[0].mac_address
+#     ip                     = element(cp.ipv4_addresses, index(cp.mac_addresses, cp.network_device[0].mac_address))[0]
+#   }]
+# }
+
+# output "control-planes-network" {
+#   depends_on = [ 
+#     proxmox_virtual_environment_vm.talos-control-plane-vm
+#    ]
+#   value = [for idx, cp in proxmox_virtual_environment_vm.talos-control-plane-vm : {
+#     type                   = "control"
+#     node_name              = cp.node_name
+#     vm_name                = cp.name
+#     vm_id                  = cp.vm_id
+#     network_interface_name = element(cp.network_interface_names, index(cp.mac_addresses, cp.network_device[0].mac_address))
+#     mac_address            = cp.network_device[0].mac_address
+#     ip                     = element(cp.ipv4_addresses, index(cp.mac_addresses, cp.network_device[0].mac_address))[0]
+#   }]
+# }
 
