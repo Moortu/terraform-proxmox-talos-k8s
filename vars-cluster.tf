@@ -33,7 +33,7 @@ variable "worker_node_first_ip" {
   default     = 171
 }
 
-variable "install_disk_device" {
+variable "talos_install_disk_device" {
   description = "Disk to install Talos on"
   type        = string
   default     = "/dev/vda"
@@ -54,11 +54,11 @@ variable "worker_node_name_prefix" {
 variable "control_plane_first_id" {
   description = "First id of a control-plane"
   type        = number
-  default     = 8101
+  default     = 8100
 }
 
 variable "worker_node_first_id" {
   description = "First id of a worker node"
   type        = number
-  default     = 8201
+  default     = 8200
 }

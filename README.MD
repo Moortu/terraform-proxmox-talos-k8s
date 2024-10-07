@@ -3,7 +3,7 @@ Thanks to
 
 
 mental order of terraform files (excluding vars and versions)
-1. download_talos-iso.tf
+1. download_talos_iso.tf
 2. init_vm_control-planes.tf
 3. init_vm_workers.tf
 4. create_talos-config.tf

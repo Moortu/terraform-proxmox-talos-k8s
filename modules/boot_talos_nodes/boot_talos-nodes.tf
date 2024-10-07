@@ -17,7 +17,7 @@
 resource "talos_machine_configuration_apply" "control-planes" {
   depends_on = [
     data.talos_machine_configuration.cp,
-    proxmox_virtual_environment_download_file.talos-iso
+    proxmox_virtual_environment_download_file.talos_iso
     # terraform_data.inline-manifests
   ]
   for_each = {

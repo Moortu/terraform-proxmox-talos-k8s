@@ -1,28 +1,34 @@
-variable "proxmox_user" {
-  description = "The user used for authentication with the Proxmox API, example: newuser@pve"
+variable "talos_iso_destination_filename" {
+  description = "Filename of the Talos iso image to store"
   type        = string
+  # %version% is replaced by talos_version
+  default     = "talos-%version%-metal-secureboot-amd64.iso"
 }
 
-variable "proxmox_api_token_id" {
-  description = "The ID of the API token used for authentication with the Proxmox API."
+variable "talos_iso_destination_server" {
+  description = "Proxmox server to store the Talos iso image on"
   type        = string
+  default     = "" #pve-node-01
 }
 
-variable "proxmox_api_token_secret" {
-  description = "The secret value of the token used for authentication with the Proxmox API."
+variable "talos_iso_destination_storage_pool" {
+  description = "Proxmox storage to store the Talos iso image on"
   type        = string
+  default     = "local" #big-storage-data
 }
 
-variable "proxmox_api_url" {
-  description = "The URL for the Proxmox API."
-  type        = string
+variable "talos_version" {
+    # https://github.com/siderolabs/talos/releases
+    description = "Talos version to use"
+    type        = string
+    default     = "1.8.0"
 }
 
 variable "proxmox_nodes" {
   description = "Proxmox servers on which the talos cluster will be deployed"
   type = map(object({
     control_planes = optional(list(object({
-      name = optional(string)
+      name = string
       # Additional kubernetes node labels to add to the worker node(s)
       node_labels = optional(map(string), {})
       # The name of the network bridge on the Proxmox host
@@ -52,7 +58,7 @@ variable "proxmox_nodes" {
     })))
 
     workers = optional(list(object({
-      name = optional(string)
+      name = string
       # Additional kubernetes node labels to add to the worker node(s)
       node_labels = optional(map(string), {})
       # The name of the network bridge on the Proxmox host
@@ -83,4 +89,3 @@ variable "proxmox_nodes" {
 
   }))
 }
-

@@ -33,7 +33,7 @@ data "talos_image_factory_urls" "this" {
 }
 
 # see https://registry.terraform.io/providers/bpg/proxmox/latest/docs/resources/virtual_environment_download_file
-resource "proxmox_virtual_environment_download_file" "talos-iso" {
+resource "proxmox_virtual_environment_download_file" "talos_iso" {
   content_type      = "iso"
   datastore_id      = var.talos_iso_destination_storage_pool
   file_name         = replace(var.talos_iso_destination_filename, "%version%", var.talos_version)

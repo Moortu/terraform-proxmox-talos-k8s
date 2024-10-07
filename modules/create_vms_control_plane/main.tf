@@ -19,15 +19,14 @@ resource "macaddress" "talos-control-plane" {
 }
 
 # see https://registry.terraform.io/providers/bpg/proxmox/0.62.0/docs/resources/virtual_environment_vm
-resource "proxmox_virtual_environment_vm" "talos-control-plane-vm" {
+resource "proxmox_virtual_environment_vm" "create_talos_control_plane_vms" {
   depends_on = [
-    proxmox_virtual_environment_download_file.talos-iso,
     macaddress.talos-control-plane
   ]
 
   for_each = { for idx, cp in local.vm_control_planes : idx => cp }
 
-  name            = each.value.name
+  name            = each.value.name != null ? each.value.name : "${var.control_plane_name_prefix}-${each.key}"
   vm_id           = each.key + var.control_plane_first_id
   node_name       = each.value.node_name
   tags            = sort(["talos", "controller", "terraform"])
@@ -61,7 +60,7 @@ resource "proxmox_virtual_environment_vm" "talos-control-plane-vm" {
 
   cdrom {
     enabled = true
-    file_id = replace(local.talos_iso_image_location, "%version%", var.talos_version)
+    file_id = replace(var.talos_iso_image_location, "%version%", var.talos_version)
   }
 
   cpu {
@@ -92,7 +91,7 @@ resource "proxmox_virtual_environment_vm" "talos-control-plane-vm" {
     interface    = "virtio0"
     size         = each.value.boot_disk_size
     datastore_id = each.value.boot_disk_storage_pool
-    iothread     = true
+    iothread     = false
     ssd          = true
     discard      = "on"
     file_format  = "raw"
@@ -115,30 +114,7 @@ resource "proxmox_virtual_environment_vm" "talos-control-plane-vm" {
   # }
 }
 
-# locals {
-#   control-planes-network = [for idx, cp in proxmox_virtual_environment_vm.talos-control-plane-vm : {
-#     type                   = "control"
-#     node_name              = cp.node_name
-#     vm_name                = cp.name
-#     vm_id                  = cp.vm_id
-#     network_interface_name = element(cp.network_interface_names, index(cp.mac_addresses, cp.network_device[0].mac_address))
-#     mac_address            = cp.network_device[0].mac_address
-#     ip                     = element(cp.ipv4_addresses, index(cp.mac_addresses, cp.network_device[0].mac_address))[0]
-#   }]
-# }
-
-# output "control-planes-network" {
-#   depends_on = [ 
-#     proxmox_virtual_environment_vm.talos-control-plane-vm
-#    ]
-#   value = [for idx, cp in proxmox_virtual_environment_vm.talos-control-plane-vm : {
-#     type                   = "control"
-#     node_name              = cp.node_name
-#     vm_name                = cp.name
-#     vm_id                  = cp.vm_id
-#     network_interface_name = element(cp.network_interface_names, index(cp.mac_addresses, cp.network_device[0].mac_address))
-#     mac_address            = cp.network_device[0].mac_address
-#     ip                     = element(cp.ipv4_addresses, index(cp.mac_addresses, cp.network_device[0].mac_address))[0]
-#   }]
-# }
-
+resource "time_sleep" "wait_for_vms" {
+  depends_on = [proxmox_virtual_environment_vm.create_talos_control_plane_vms]
+  create_duration = "5s"
+}

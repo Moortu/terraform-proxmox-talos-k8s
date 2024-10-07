@@ -2,15 +2,15 @@ locals {
   talos_k8s_cluster_endpoint = "https://${var.talos_k8s_cluster_domain}:${var.talos_k8s_cluster_endpoint_port}"
   storage_mnt      = "/var/mnt/storage"
 
-  control_plane_ip-addresses = [for cp in local.control-planes_network : cp.ip]
+  control_plane_ip-addresses = [for cp in var.talos_control_plane_vms_network : cp.ip]
 
   # default talos_machine_configuration values
   talos_mc_defaults = {
     topology_region     = var.talos_k8s_cluster_name,
     talos_version       = var.talos_version,
     network_gateway     = var.network_gateway,
-    install_disk_device = var.install_disk_device,
-    install_image_url   = data.talos_image_factory_urls.this.urls.installer_secureboot
+    install_disk_device = var.talos_install_disk_device,
+    install_image_url   = var.talos_install_image_url
   }
 }
 

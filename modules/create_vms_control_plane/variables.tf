@@ -1,28 +1,56 @@
-variable "proxmox_user" {
-  description = "The user used for authentication with the Proxmox API, example: newuser@pve"
-  type        = string
+variable "control_plane_first_id" {
+  description = "First id of a control-plane"
+  type        = number
+  default     = 8101
 }
 
-variable "proxmox_api_token_id" {
-  description = "The ID of the API token used for authentication with the Proxmox API."
-  type        = string
+variable "control_plane_first_ip" {
+  description = "First ip of a control-plane"
+  type        = number
+  default     = 161
 }
 
-variable "proxmox_api_token_secret" {
-  description = "The secret value of the token used for authentication with the Proxmox API."
-  type        = string
+variable "network_dhcp" {
+  description = "If dhcp is enabled and configured"
+  type        = bool
+  default     = true
 }
 
-variable "proxmox_api_url" {
-  description = "The URL for the Proxmox API."
+variable "network_cidr" {
+  description = "Network address in CIDR notation"
   type        = string
+  default     = "10.0.0.0/16"
+}
+
+variable "network_gateway" {
+  description = "Gateway of the network"
+  type        = string
+  default     = "10.0.0.1"
+}
+
+variable "talos_version" {
+    # https://github.com/siderolabs/talos/releases
+    description = "Talos version to use"
+    type        = string
+    default     = "1.8.0"
+}
+
+variable "talos_iso_image_location" {
+  description = "talos iso image location"
+  type = string
+}
+
+variable "control_plane_name_prefix" {
+  description = "Name prefix used in both VM name and hostname, for a control-plane"
+  type        = string
+  default     = "talos-control-plane"
 }
 
 variable "proxmox_nodes" {
   description = "Proxmox servers on which the talos cluster will be deployed"
   type = map(object({
     control_planes = optional(list(object({
-      name = optional(string)
+      name = string
       # Additional kubernetes node labels to add to the worker node(s)
       node_labels = optional(map(string), {})
       # The name of the network bridge on the Proxmox host
@@ -52,7 +80,7 @@ variable "proxmox_nodes" {
     })))
 
     workers = optional(list(object({
-      name = optional(string)
+      name = string
       # Additional kubernetes node labels to add to the worker node(s)
       node_labels = optional(map(string), {})
       # The name of the network bridge on the Proxmox host
@@ -83,4 +111,3 @@ variable "proxmox_nodes" {
 
   }))
 }
-

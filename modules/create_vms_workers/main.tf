@@ -20,15 +20,14 @@ resource "macaddress" "talos-worker" {
 }
 
 # see https://registry.terraform.io/providers/bpg/proxmox/0.62.0/docs/resources/virtual_environment_vm
-resource "proxmox_virtual_environment_vm" "talos-worker-vm" {
+resource "proxmox_virtual_environment_vm" "talos_worker_vms" {
   depends_on = [
-    proxmox_virtual_environment_download_file.talos-iso,
     macaddress.talos-worker
   ]
   #index all workers, map the index to a worker
   for_each = { for idx, wk in local.vm_workers : idx => wk }
 
-  name            = each.value.name
+  name            = each.value.name != null ? each.value.name : "${var.worker_node_name_prefix}-${each.key}"
   vm_id           = each.key + var.worker_node_first_id
   node_name       = each.value.node_name
   tags            = sort(["talos", "worker", "terraform"])
@@ -62,7 +61,7 @@ resource "proxmox_virtual_environment_vm" "talos-worker-vm" {
 
   cdrom {
     enabled = true
-    file_id = replace(local.talos_iso_image_location, "%version%", var.talos_version)
+    file_id = replace(var.talos_iso_image_location, "%version%", var.talos_version)
   }
 
   cpu {
@@ -93,7 +92,7 @@ resource "proxmox_virtual_environment_vm" "talos-worker-vm" {
     interface    = "virtio0"
     size         = each.value.boot_disk_size
     datastore_id = each.value.boot_disk_storage_pool
-    iothread     = true
+    iothread     = false
     ssd          = true
     discard      = "on"
     file_format  = "raw"
@@ -115,29 +114,7 @@ resource "proxmox_virtual_environment_vm" "talos-worker-vm" {
   # }
 }
 
-# locals {
-#   workers-network = [for wn in proxmox_virtual_environment_vm.talos-worker-vm : {
-#     type                   = "worker"
-#     node_name              = wn.node_name
-#     vm_name                = wn.name
-#     vm_id                  = wn.vm_id
-#     network_interface_name = element(wn.network_interface_names, index(wn.mac_addresses, wn.network_device[0].mac_address))
-#     mac_address            = wn.network_device[0].mac_address
-#     ip                     = element(wn.ipv4_addresses, index(wn.mac_addresses, wn.network_device[0].mac_address))[0]
-#   }]
-# }
-
-# output "workers-network" {
-#   depends_on = [ 
-#     proxmox_virtual_environment_vm.talos-worker-vm
-#    ]
-#   value = [for wn in proxmox_virtual_environment_vm.talos-worker-vm : {
-#     type                   = "worker"
-#     node_name              = wn.node_name
-#     vm_name                = wn.name
-#     vm_id                  = wn.vm_id
-#     network_interface_name = element(wn.network_interface_names, index(wn.mac_addresses, wn.network_device[0].mac_address))
-#     mac_address            = wn.network_device[0].mac_address
-#     ip                     = element(wn.ipv4_addresses, index(wn.mac_addresses, wn.network_device[0].mac_address))[0]
-#   }]
-# }
+resource "time_sleep" "wait_for_vms" {
+  depends_on = [proxmox_virtual_environment_vm.talos_worker_vms]
+  create_duration = "5s"
+}
