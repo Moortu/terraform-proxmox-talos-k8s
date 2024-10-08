@@ -69,28 +69,6 @@ provider "proxmox" {
 }
 
 locals {
-  vm_control_planes = flatten([
-    for node_name, node in var.proxmox_nodes : [
-      for control_plane in node.control_planes : merge(control_plane, {
-        node_name = node_name
-      })
-    ]
-  ])
-
-  control_planes_map = { for cp in local.vm_control_planes : cp.name => cp }
-  vm_control_planes_count = length(local.vm_control_planes)
-
-  vm_workers = flatten([
-    for node_name, node in var.proxmox_nodes : [
-      for worker in node.workers : merge(worker, {
-        node_name = node_name
-      })
-    ]
-  ])
-
-  workers_map = { for wn in local.vm_workers : wn.name => wn }
-  vm_worker_count = length(local.vm_workers)
-
   talos_iso_image_location = "${var.talos_iso_destination_storage_pool}:iso/${replace(var.talos_iso_destination_filename, "%", var.talos_version)}"
   talos_k8s_cluster_endpoint = "https://${var.talos_k8s_cluster_domain}:${var.talos_k8s_cluster_endpoint_port}"
 }

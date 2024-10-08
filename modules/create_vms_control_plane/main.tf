@@ -1,13 +1,11 @@
 locals {
   vm_control_planes = flatten([
     for node_name, node in var.proxmox_nodes : [
-      for control_plane in node.control_planes : merge(control_plane, {
-        node_name = node_name
-      })
+      for control_plane in node.control_planes : merge(control_plane, { node_name = node_name })
     ]
   ])
 
-  control_planes_map = { for cp in local.vm_control_planes : cp.name => cp }
+  # control_planes_map = { for cp in local.vm_control_planes : cp.name => cp }
 
   vm_control_planes_count = length(local.vm_control_planes)
 }

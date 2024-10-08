@@ -2,13 +2,11 @@ locals {
 
   vm_workers = flatten([
     for node_name, node in var.proxmox_nodes : [
-      for worker in node.workers : merge(worker, {
-        node_name = node_name
-      })
+      for worker in node.workers : merge(worker, { node_name = node_name })
     ]
   ])
 
-  workers_map = { for wn in local.vm_workers : wn.name => wn }
+  # workers_map = { for wn in local.vm_workers : wn.name => wn }
 
   vm_worker_count = length(local.vm_workers)
 }
