@@ -124,23 +124,23 @@ module "workers_vms" {
   worker_node_name_prefix = var.worker_node_name_prefix
 }
 
-# module "create_talos_config" {
-#   depends_on = [ module.control_plane_vms, module.workers_vms, module.talos_iso ]
-#   source = "./modules/create_talos_config"
+module "create_talos_config" {
+  depends_on = [ module.control_plane_vms, module.workers_vms, module.talos_iso ]
+  source = "./modules/create_talos_config"
 
-#   providers = {
-#     talos = talos
-#     time = time
-#   }
+  providers = {
+    talos = talos
+    time = time
+  }
 
-#   talos_k8s_cluster_domain = var.talos_k8s_cluster_domain
-#   talos_k8s_cluster_endpoint_port = var.talos_k8s_cluster_endpoint_port
-#   talos_k8s_cluster_name = var.talos_k8s_cluster_name
-#   talos_k8s_cluster_vip = var.talos_k8s_cluster_vip
-#   talos_version = var.talos_version
-#   network_gateway = var.network_gateway
-#   k8s_version = var.k8s_version
-#   talos_install_disk_device = var.talos_install_disk_device
-#   talos_control_plane_vms_network = module.control_plane_vms.talos_control_plane_vms_network
-#   talos_install_image_url = module.talos_iso.talos_image_url
-# } 
+  talos_k8s_cluster_domain = var.talos_k8s_cluster_domain
+  talos_k8s_cluster_endpoint_port = var.talos_k8s_cluster_endpoint_port
+  talos_k8s_cluster_name = var.talos_k8s_cluster_name
+  talos_k8s_cluster_vip = var.talos_k8s_cluster_vip
+  talos_version = var.talos_version
+  network_gateway = var.network_gateway
+  k8s_version = var.k8s_version
+  talos_install_disk_device = var.talos_install_disk_device
+  talos_control_plane_vms_network = module.control_plane_vms.talos_control_plane_vms_network
+  talos_install_image_url = module.talos_iso.talos_image_url
+} 

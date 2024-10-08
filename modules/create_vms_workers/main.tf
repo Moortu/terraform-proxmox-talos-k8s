@@ -49,7 +49,7 @@ resource "proxmox_virtual_environment_vm" "talos_worker_vms" {
     ip_config {
       ipv4 {
         address = var.network_dhcp ? "dhcp" : "${cidrhost(var.network_cidr, each.key + var.worker_node_first_ip)}/${split("/", var.network_cidr)[1]}"
-        gateway = var.network_gateway
+        gateway = var.network_dhcp ? null : var.network_gateway
       }
     }
   }
@@ -92,11 +92,14 @@ resource "proxmox_virtual_environment_vm" "talos_worker_vms" {
     interface    = "virtio0"
     size         = each.value.boot_disk_size
     datastore_id = each.value.boot_disk_storage_pool
-    iothread     = false
-    ssd          = true
     discard      = "on"
     file_format  = "raw"
     backup       = false
+  }
+
+  efi_disk {
+    datastore_id = each.value.boot_disk_storage_pool
+    type = "4m"
   }
 
   # dynamic "disk" {
