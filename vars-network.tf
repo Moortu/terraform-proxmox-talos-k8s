@@ -1,22 +1,22 @@
-variable "network_ip_prefix" {
+variable "talos_network_ip_prefix" {
   description = "Network IP network prefix"
   type        = number
   default     = 24
 }
 
-variable "network_cidr" {
+variable "talos_network_cidr" {
   description = "Network address in CIDR notation"
   type        = string
   default     = "10.0.0.0/16"
 }
 
-variable "network_gateway" {
+variable "talos_network_gateway" {
   description = "Gateway of the network"
   type        = string
   default     = "10.0.0.1"
 }
 
-variable "network_dhcp" {
+variable "talos_network_dhcp" {
   description = "If dhcp is enabled and configured"
   type        = bool
   default     = true

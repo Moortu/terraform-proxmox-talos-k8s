@@ -46,8 +46,8 @@ resource "proxmox_virtual_environment_vm" "create_talos_control_plane_vms" {
   initialization {
     ip_config {
       ipv4 {
-        address = var.network_dhcp ? "dhcp" : "${cidrhost(var.network_cidr, each.key + var.control_plane_first_ip)}/${split("/", var.network_cidr)[1]}"
-        gateway = var.network_dhcp ? null : var.network_gateway
+        address = var.talos_network_dhcp ? "dhcp" : "${cidrhost(var.talos_network_cidr, each.key + var.control_plane_first_ip)}/${split("/", var.talos_network_cidr)[1]}"
+        gateway = var.talos_network_dhcp ? null : var.talos_network_gateway
       }
     }
   }
@@ -59,7 +59,7 @@ resource "proxmox_virtual_environment_vm" "create_talos_control_plane_vms" {
 
   cdrom {
     enabled = true
-    file_id = replace(var.talos_iso_image_location, "%version%", var.talos_version)
+    file_id = var.talos_iso_image_location
   }
 
   cpu {

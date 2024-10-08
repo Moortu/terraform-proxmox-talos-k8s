@@ -28,7 +28,7 @@ variable "talos_version" {
     default     = "1.8.0"
 }
 
-variable "network_gateway" {
+variable "talos_network_gateway" {
   description = "Gateway of the network"
   type        = string
   default     = "10.0.0.1"

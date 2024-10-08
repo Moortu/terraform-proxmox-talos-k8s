@@ -8,7 +8,7 @@ locals {
   talos_mc_defaults = {
     topology_region     = var.talos_k8s_cluster_name,
     talos_version       = var.talos_version,
-    network_gateway     = var.network_gateway,
+    network_gateway     = var.talos_network_gateway,
     install_disk_device = var.talos_install_disk_device,
     install_image_url   = var.talos_install_image_url
   }

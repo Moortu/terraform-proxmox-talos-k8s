@@ -69,7 +69,7 @@ provider "proxmox" {
 }
 
 locals {
-  talos_iso_image_location = "${var.talos_iso_destination_storage_pool}:iso/${replace(var.talos_iso_destination_filename, "%", var.talos_version)}"
+  talos_iso_image_location = "${var.talos_iso_destination_storage_pool}:iso/${replace(var.talos_iso_destination_filename, "%version%", var.talos_version)}"
   talos_k8s_cluster_endpoint = "https://${var.talos_k8s_cluster_domain}:${var.talos_k8s_cluster_endpoint_port}"
 }
 
@@ -81,11 +81,11 @@ module "talos_iso" {
     talos = talos
   }
 
-  talos_iso_destination_filename = var.talos_iso_destination_filename
-  talos_iso_destination_server = var.talos_iso_destination_server
-  talos_iso_destination_storage_pool = var.talos_iso_destination_storage_pool
-  talos_version = var.talos_version
-  proxmox_nodes = var.proxmox_nodes
+  talos_iso_destination_filename      = var.talos_iso_destination_filename
+  talos_iso_destination_server        = var.talos_iso_destination_server
+  talos_iso_destination_storage_pool  = var.talos_iso_destination_storage_pool
+  talos_version                       = var.talos_version
+  proxmox_nodes                       = var.proxmox_nodes
 }
 
 module "control_plane_vms" {
@@ -97,15 +97,14 @@ module "control_plane_vms" {
     proxmox = proxmox
   }
 
-  proxmox_nodes = var.proxmox_nodes
-  control_plane_first_id = var.control_plane_first_id
-  control_plane_first_ip = var.control_plane_first_ip
-
-  network_dhcp = var.network_dhcp
-  network_cidr = var.network_cidr
-  network_gateway = var.network_gateway
-  talos_version = var.talos_version
-  talos_iso_image_location = local.talos_iso_image_location
+  proxmox_nodes             = var.proxmox_nodes
+  control_plane_first_id    = var.control_plane_first_id
+  control_plane_first_ip    = var.control_plane_first_ip
+  talos_network_dhcp        = var.talos_network_dhcp
+  talos_network_cidr        = var.talos_network_cidr
+  talos_network_gateway     = var.talos_network_gateway
+  talos_version             = var.talos_version
+  talos_iso_image_location  = local.talos_iso_image_location
   control_plane_name_prefix = var.control_plane_name_prefix
 }
 
@@ -118,15 +117,15 @@ module "workers_vms" {
     proxmox = proxmox
   }
 
-  proxmox_nodes = var.proxmox_nodes
-  worker_node_first_id = var.worker_node_first_id
-  worker_node_first_ip = var.worker_node_first_ip
-  network_dhcp = var.network_dhcp
-  network_cidr = var.network_cidr
-  network_gateway = var.network_gateway
-  talos_version = var.talos_version
-  talos_iso_image_location = local.talos_iso_image_location
-  worker_node_name_prefix = var.worker_node_name_prefix
+  proxmox_nodes             = var.proxmox_nodes
+  worker_node_first_id      = var.worker_node_first_id
+  worker_node_first_ip      = var.worker_node_first_ip
+  talos_network_dhcp        = var.talos_network_dhcp
+  talos_network_cidr        = var.talos_network_cidr
+  talos_network_gateway     = var.talos_network_gateway
+  talos_version             = var.talos_version
+  talos_iso_image_location  = local.talos_iso_image_location
+  worker_node_name_prefix   = var.worker_node_name_prefix
 }
 
 module "create_talos_config" {
@@ -137,14 +136,35 @@ module "create_talos_config" {
     talos = talos
   }
 
-  talos_k8s_cluster_domain = var.talos_k8s_cluster_domain
+  talos_k8s_cluster_domain        = var.talos_k8s_cluster_domain
   talos_k8s_cluster_endpoint_port = var.talos_k8s_cluster_endpoint_port
-  talos_k8s_cluster_name = var.talos_k8s_cluster_name
-  talos_k8s_cluster_vip = var.talos_k8s_cluster_vip
-  talos_version = var.talos_version
-  network_gateway = var.network_gateway
-  k8s_version = var.k8s_version
-  talos_install_disk_device = var.talos_install_disk_device
+  talos_k8s_cluster_name          = var.talos_k8s_cluster_name
+  talos_k8s_cluster_vip           = var.talos_k8s_cluster_vip
+  talos_version                   = var.talos_version
+  talos_network_gateway           = var.talos_network_gateway
+  k8s_version                     = var.k8s_version
+  talos_install_disk_device       = var.talos_install_disk_device
   talos_control_plane_vms_network = module.control_plane_vms.talos_control_plane_vms_network
-  talos_install_image_url = module.talos_iso.talos_image_url
+  talos_install_image_url         = module.talos_iso.talos_image_url
 } 
+
+module "boot_talos_nodes" {
+  depends_on = [ module.create_talos_config ]
+  source = "./modules/boot_talos_nodes"
+
+  providers = {
+    talos = talos
+  }
+
+  talos_k8s_cluster_endpoint                  = local.talos_k8s_cluster_endpoint
+  talos_k8s_cluster_domain                    = var.talos_k8s_cluster_domain
+  talos_k8s_cluster_endpoint_port             = var.talos_k8s_cluster_endpoint_port
+  talos_k8s_cluster_vip                       = var.talos_k8s_cluster_vip
+  talos_network_gateway                       = var.talos_network_gateway
+  talos_network_ip_prefix                     = var.talos_network_ip_prefix
+  control_planes_network                      = module.control_plane_vms.talos_control_plane_vms_network
+  workers_network                             = module.workers_vms.talos_worker_network
+  talos_machine_configuration_control_planes  = module.create_talos_config.talos_machine_configuration_control_planes
+  talos_machine_configuration_workers         = module.create_talos_config.talos_machine_configuration_workers
+  talos_machine_secrets                       = module.create_talos_config.talos_machine_secrets
+}
