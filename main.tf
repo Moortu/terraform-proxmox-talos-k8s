@@ -68,6 +68,33 @@ provider "proxmox" {
     }
 }
 
+locals {
+  vm_control_planes = flatten([
+    for node_name, node in var.proxmox_nodes : [
+      for control_plane in node.control_planes : merge(control_plane, {
+        node_name = node_name
+      })
+    ]
+  ])
+
+  control_planes_map = { for cp in local.vm_control_planes : cp.name => cp }
+  vm_control_planes_count = length(local.vm_control_planes)
+
+  vm_workers = flatten([
+    for node_name, node in var.proxmox_nodes : [
+      for worker in node.workers : merge(worker, {
+        node_name = node_name
+      })
+    ]
+  ])
+
+  workers_map = { for wn in local.vm_workers : wn.name => wn }
+  vm_worker_count = length(local.vm_workers)
+
+  talos_iso_image_location = "${var.talos_iso_destination_storage_pool}:iso/${replace(var.talos_iso_destination_filename, "%", var.talos_version)}"
+  talos_k8s_cluster_endpoint = "https://${var.talos_k8s_cluster_domain}:${var.talos_k8s_cluster_endpoint_port}"
+}
+
 module "talos_iso" {
   source = "./modules/download_talos_iso"
 
@@ -100,7 +127,7 @@ module "control_plane_vms" {
   network_cidr = var.network_cidr
   network_gateway = var.network_gateway
   talos_version = var.talos_version
-  talos_iso_image_location = module.talos_iso.talos_iso_image_location
+  talos_iso_image_location = local.talos_iso_image_location
   control_plane_name_prefix = var.control_plane_name_prefix
 }
 
@@ -120,7 +147,7 @@ module "workers_vms" {
   network_cidr = var.network_cidr
   network_gateway = var.network_gateway
   talos_version = var.talos_version
-  talos_iso_image_location = module.talos_iso.talos_iso_image_location
+  talos_iso_image_location = local.talos_iso_image_location
   worker_node_name_prefix = var.worker_node_name_prefix
 }
 
@@ -130,7 +157,6 @@ module "create_talos_config" {
 
   providers = {
     talos = talos
-    time = time
   }
 
   talos_k8s_cluster_domain = var.talos_k8s_cluster_domain

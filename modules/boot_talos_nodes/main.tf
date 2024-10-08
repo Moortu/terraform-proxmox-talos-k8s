@@ -1,3 +1,7 @@
+locals {
+  talos_k8s_cluster_endpoint = "https://${var.talos_k8s_cluster_domain}:${var.talos_k8s_cluster_endpoint_port}"
+}
+
 # resource "terraform_data" "inline-manifests" {
 #   depends_on = [
 #     data.external.kustomize_cilium,
@@ -11,7 +15,6 @@
 #     }
 #   ]
 # }
-
 
 # see https://registry.terraform.io/providers/siderolabs/talos/0.6.0/docs/resources/machine_configuration_apply
 resource "talos_machine_configuration_apply" "control-planes" {
