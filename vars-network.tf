@@ -7,13 +7,13 @@ variable "talos_network_ip_prefix" {
 variable "talos_network_cidr" {
   description = "Network address in CIDR notation"
   type        = string
-  default     = "10.0.0.0/16"
+  default     = "192.168.1.0/24"
 }
 
 variable "talos_network_gateway" {
   description = "Gateway of the network"
   type        = string
-  default     = "10.0.0.1"
+  default     = "192.168.1.1"
 }
 
 variable "talos_network_dhcp" {

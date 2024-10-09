@@ -68,7 +68,7 @@ resource "talos_machine_configuration_apply" "worker_nodes" {
 resource "talos_machine_bootstrap" "this" {
   depends_on = [
     talos_machine_configuration_apply.control_planes,
-    talos_machine_configuration_apply.worker_nodes
+    # talos_machine_configuration_apply.worker_nodes
   ]
 
   client_configuration = var.talos_machine_secrets.client_configuration
@@ -76,11 +76,45 @@ resource "talos_machine_bootstrap" "this" {
 }
 
 # see https://registry.terraform.io/providers/siderolabs/talos/0.6.0/docs/data-sources/cluster_health
-data "talos_cluster_health" "ready" {
+# data "talos_cluster_health" "ready" {
+#   depends_on = [talos_machine_bootstrap.this]
+
+#   client_configuration = var.talos_machine_secrets.client_configuration
+#   endpoints            = [var.talos_k8s_cluster_vip]
+#   control_plane_nodes  = [for i in var.control_planes_network : i.ip]
+#   # worker_nodes         = [for i in var.workers_network :i.ip]
+
+#   skip_kubernetes_checks = true
+#   timeouts = {
+#     read = "3m"
+#   }
+# }
+
+resource "time_sleep" "wait_for_talos_cluster_bootstrap" {
   depends_on = [talos_machine_bootstrap.this]
+  create_duration = "3m"
+}
+
+
+resource "talos_cluster_kubeconfig" "kubeconfig" {
+  depends_on = [time_sleep.wait_for_talos_cluster_bootstrap]
 
   client_configuration = var.talos_machine_secrets.client_configuration
-  endpoints            = [for i in var.control_planes_network : i.ip]
-  control_plane_nodes  = [for i in var.control_planes_network : i.ip]
-  worker_nodes         = [for i in var.workers_network :i.ip]
+  node                 = var.control_planes_network[0].ip
+}
+
+data "talos_client_configuration" "talosconfig" {
+  cluster_name         = "example-cluster"
+  client_configuration = var.talos_machine_secrets.client_configuration
+  nodes                = [ for node in var.control_planes_network: node.ip ]
+}
+
+resource "local_sensitive_file" "export_talosconfig" {
+  content    = data.talos_client_configuration.talosconfig.talos_config
+  filename   = "${path.root}/generated/talosconfig" #rename to config, place in .talos
+}
+
+resource "local_sensitive_file" "export_kubeconfig" {
+  content    = talos_cluster_kubeconfig.kubeconfig.kubeconfig_raw
+  filename   = "${path.root}/generated/kubeconfig" #rename to config place in .kube
 }
