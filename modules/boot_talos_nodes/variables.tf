@@ -60,12 +60,14 @@ variable "workers_network" {
 
 variable "talos_machine_configuration_control_planes" {
   description = "Talos machine configuration Control planes"
+  type = any
 }
 
 variable "talos_machine_configuration_workers" {
   description = "Talos machine configuration Workers"
+  type = any
 }
 
 variable "talos_machine_secrets" {
-  
+  type = any
 }

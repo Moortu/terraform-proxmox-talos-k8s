@@ -1,106 +1,86 @@
-# resource "terraform_data" "inline-manifests" {
-#   depends_on = [
-#     data.external.kustomize_cilium,
-#   ]
-
-#   input = [
-#     {
-#       # required, is used as CNI and is needed for Talos to report nodes as ready
-#       name     = "cilium"
-#       contents = data.external.kustomize_cilium.result.manifests
-#     }
-#   ]
-# }
+locals {
+  cilium_manifest = file("${path.root}/manifests/cilium/cilium-manifest.yaml")
+}
 
 # see https://registry.terraform.io/providers/siderolabs/talos/0.6.0/docs/resources/machine_configuration_apply
-# resource "talos_machine_configuration_apply" "control-planes" {
-#   for_each = {
-#     for idx, cp in var.control_planes_network : idx => cp
-#   }
+resource "talos_machine_configuration_apply" "control_planes" {
+  for_each = { for idx, cp in var.control_planes_network : idx => cp }
 
-#   client_configuration        = var.talos_machine_secrets.talos.client_configuration
-#   machine_configuration_input = var.talos_machine_configuration_control_planes
+  client_configuration        = var.talos_machine_secrets.client_configuration
+  machine_configuration_input = var.talos_machine_configuration_control_planes.machine_configuration
 
-#   node = each.value.vm_name
-#   endpoint = each.value.ip
+  node = each.value.vm_name
+  endpoint = each.value.ip
 
-#   config_patches = [
-#     templatefile("${path.module}/talos-config/control-plane.yaml.tftpl", {
-#       topology_zone     = each.value.node_name,
-#       cluster_domain    = var.talos_k8s_cluster_domain,
-#       cluster_endpoint  = var.talos_k8s_cluster_endpoint,
-#       network_interface = each.value.network_interface_name,
-#       network_ip_prefix = var.talos_network_ip_prefix,
-#       network_gateway   = var.talos_network_gateway,
-#       hostname          = each.value.vm_name,
-#       ipv4_local        = each.value.ip,
-#       ipv4_vip          = var.talos_k8s_cluster_vip,
-#       inline_manifests  = "" #jsonencode(terraform_data.inline-manifests.output)
-#     }),
-#   ]
-# }
+  config_patches = [
+    templatefile("${path.root}/talos-config-templates/control-plane.yaml.tftpl", {
+      topology_zone     = each.value.node_name,
+      cluster_domain    = var.talos_k8s_cluster_domain,
+      cluster_endpoint  = var.talos_k8s_cluster_endpoint,
+      network_interface = each.value.network_interface_name,
+      network_ip_prefix = var.talos_network_ip_prefix,
+      network_gateway   = var.talos_network_gateway,
+      hostname          = each.value.vm_name,
+      ipv4_local        = each.value.ip,
+      ipv4_vip          = var.talos_k8s_cluster_vip,
+      inline_manifests  = local.cilium_manifest
+    })
+  ]
+}
 
-# # see https://registry.terraform.io/providers/siderolabs/talos/0.6.0-alpha.1/docs/resources/machine_configuration_apply
-# resource "talos_machine_configuration_apply" "worker-nodes" {
-#   for_each = {
-#     for idx, wn in var.workers_network : idx => wn
-#   }
+# see https://registry.terraform.io/providers/siderolabs/talos/0.6.0/docs/resources/machine_configuration_apply
+resource "talos_machine_configuration_apply" "worker_nodes" {
+  for_each = { for idx, wn in var.workers_network : idx => wn }
 
-#   client_configuration        = var.talos_machine_secrets.talos.client_configuration
-#   machine_configuration_input = var.talos_machine_configuration_workers
+  client_configuration        = var.talos_machine_secrets.client_configuration
+  machine_configuration_input = var.talos_machine_configuration_workers.machine_configuration
 
-#   node = each.value.vm_name
-#   endpoint = each.value.ip
+  node = each.value.vm_name
+  endpoint = each.value.ip
 
-#   config_patches = concat([
-#     templatefile("${path.module}/talos-config/worker-node.yaml.tftpl", {
-#       topology_zone     = each.value.target_server,
-#       cluster_domain    = var.talos_k8s_cluster_domain,
-#       network_interface = each.value.network_interface_name,
-#       network_ip_prefix = var.network_ip_prefix,
-#       network_gateway   = var.network_gateway,
-#       hostname          = each.value.vm_name,
-#       ipv4_local        = each.value.ip,
-#       ipv4_vip          = var.talos_k8s_cluster_vip,
-#     }),
-#     templatefile("${path.module}/talos-config/node-labels.yaml.tftpl", {
-#       node_labels = jsonencode(each.value.node_labels),
-#     })
-#   ],
-#     [
-#       for disk in each.value.data_disks : templatefile(
-#       "${path.module}/talos-config/worker-node-disk.yaml.tftpl",
-#       {
-#         disk_device = "/dev/${disk.device_name}",
-#         mount_point = disk.mount_point,
-#       })
-#     ]
-#   )
-# }
+  config_patches = concat([
+    templatefile("${path.root}/talos-config-templates/worker-node.yaml.tftpl", {
+      topology_zone     = each.value.node_name,
+      cluster_domain    = var.talos_k8s_cluster_domain,
+      network_interface = each.value.network_interface_name,
+      network_ip_prefix = var.talos_network_ip_prefix,
+      network_gateway   = var.talos_network_gateway,
+      hostname          = each.value.vm_name,
+      ipv4_local        = each.value.ip,
+      ipv4_vip          = var.talos_k8s_cluster_vip,
+    }),
+    templatefile("${path.root}/talos-config-templates/node-labels.yaml.tftpl", {
+      node_labels = "worker",
+    })
+  ],
+    # [
+    #   for disk in each.value.data_disks : templatefile(
+    #   "${path.root}/talos-config-templates/worker-node-disk.yaml.tftpl",
+    #   {
+    #     disk_device = "/dev/${disk.device_name}",
+    #     mount_point = disk.mount_point,
+    #   })
+    # ]
+  )
+}
 
-# # see https://registry.terraform.io/providers/siderolabs/talos/0.6.0-alpha.1/docs/resources/machine_bootstrap
-# resource "talos_machine_bootstrap" "this" {
-#   depends_on = [
-#     talos_machine_configuration_apply.control-planes,
-#     talos_machine_configuration_apply.worker-nodes
-#   ]
+# see https://registry.terraform.io/providers/siderolabs/talos/0.6.0/docs/resources/machine_bootstrap
+resource "talos_machine_bootstrap" "this" {
+  depends_on = [
+    talos_machine_configuration_apply.control_planes,
+    talos_machine_configuration_apply.worker_nodes
+  ]
 
-#   client_configuration = talos_machine_secrets.talos.client_configuration
-#   node                 = talos_machine_configuration_apply.control-planes[0].node
-# }
+  client_configuration = var.talos_machine_secrets.client_configuration
+  node                 = var.control_planes_network[0].ip
+}
 
-# see https://registry.terraform.io/providers/siderolabs/talos/0.6.0-alpha.1/docs/data-sources/cluster_health
-# TODO check and fix
+# see https://registry.terraform.io/providers/siderolabs/talos/0.6.0/docs/data-sources/cluster_health
+data "talos_cluster_health" "ready" {
+  depends_on = [talos_machine_bootstrap.this]
 
-# unfortunately, this does not really check, wait and retry for the cluster to
-# be ready but instead errors and fails when unable to connect to nodes that
-# are in the process of getting ready
-#
-# data "talos_cluster_health" "ready" {
-#   depends_on = [null_resource.talos-cluster-up]
-#
-#   client_configuration = talos_machine_secrets.this.client_configuration
-#   endpoints            = [for i, mac in macaddress.talos-control-plane: data.external.mac-to-ip.result[mac.address]]
-#   control_plane_nodes  = [for i, mac in macaddress.talos-control-plane : data.external.mac-to-ip.result[mac.address]]
-#   worker_nodes         = [for i, mac in macaddress.talos-worker : data.external.mac-to-ip.result[mac.address]]
-# }
+  client_configuration = var.talos_machine_secrets.client_configuration
+  endpoints            = [for i in var.control_planes_network : i.ip]
+  control_plane_nodes  = [for i in var.control_planes_network : i.ip]
+  worker_nodes         = [for i in var.workers_network :i.ip]
+}

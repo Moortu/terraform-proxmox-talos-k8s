@@ -4,7 +4,6 @@ output "talos_control_plane_vms_info" {
   value = proxmox_virtual_environment_vm.create_talos_control_plane_vms
 }
 
-
 output "talos_control_plane_vms_network" {
   depends_on = [ time_sleep.wait_for_vms ]
   value = [for idx, cp in proxmox_virtual_environment_vm.create_talos_control_plane_vms : {

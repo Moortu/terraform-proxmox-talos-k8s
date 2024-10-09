@@ -1,12 +1,9 @@
 locals {
-
   vm_workers = flatten([
     for node_name, node in var.proxmox_nodes : [
       for worker in node.workers : merge(worker, { node_name = node_name })
     ]
   ])
-
-  # workers_map = { for wn in local.vm_workers : wn.name => wn }
 
   vm_worker_count = length(local.vm_workers)
 }
@@ -28,7 +25,7 @@ resource "proxmox_virtual_environment_vm" "talos_worker_vms" {
   name            = each.value.name != null ? each.value.name : "${var.worker_node_name_prefix}-${each.key}"
   vm_id           = each.key + var.worker_node_first_id
   node_name       = each.value.node_name
-  tags            = sort(["talos", "worker", "terraform"])
+  tags            = ["talos", "worker", "terraform"]
   on_boot         = true
   stop_on_destroy = true
   bios            = "ovmf"
@@ -37,6 +34,7 @@ resource "proxmox_virtual_environment_vm" "talos_worker_vms" {
 
   agent {
     enabled = true
+    timeout = "20m"
   }
 
   tpm_state {
@@ -53,7 +51,7 @@ resource "proxmox_virtual_environment_vm" "talos_worker_vms" {
   }
 
   vga {
-    type = "virtio"
+    type   = "virtio"
     memory = "256"
   }
 
@@ -71,7 +69,7 @@ resource "proxmox_virtual_environment_vm" "talos_worker_vms" {
 
   memory {
     dedicated = each.value.memory*1024
-    floating = each.value.memory*1024
+    floating  = each.value.memory*1024
   }
 
   network_device {

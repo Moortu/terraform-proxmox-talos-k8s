@@ -5,8 +5,6 @@ locals {
     ]
   ])
 
-  # control_planes_map = { for cp in local.vm_control_planes : cp.name => cp }
-
   vm_control_planes_count = length(local.vm_control_planes)
 }
 
@@ -21,13 +19,13 @@ resource "proxmox_virtual_environment_vm" "create_talos_control_plane_vms" {
   depends_on = [
     macaddress.talos-control-plane
   ]
-
+  #index all cps, map the index to a cp
   for_each = { for idx, cp in local.vm_control_planes : idx => cp }
 
   name            = each.value.name != null ? each.value.name : "${var.control_plane_name_prefix}-${each.key}"
   vm_id           = each.key + var.control_plane_first_id
   node_name       = each.value.node_name
-  tags            = sort(["talos", "controller", "terraform"])
+  tags            = ["talos", "controller", "terraform"]
   on_boot         = true
   stop_on_destroy = true
   bios            = "ovmf"

@@ -27,4 +27,9 @@ machine:
           - ${cluster_domain}
 
 cluster:
-  inlineManifests: ${inline_manifests}
+  allowSchedulingOnMasters: true
+  inlineManifests:
+    - name: cilium
+      contents: |
+        ${indent(8, inline_manifests)}
+    
