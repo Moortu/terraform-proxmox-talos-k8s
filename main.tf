@@ -156,7 +156,7 @@ module "boot_talos_nodes" {
   providers = {
     talos = talos
   }
-
+  talos_k8s_cluster_name                      = var.talos_k8s_cluster_name
   talos_k8s_cluster_endpoint                  = local.talos_k8s_cluster_endpoint
   talos_k8s_cluster_domain                    = var.talos_k8s_cluster_domain
   talos_k8s_cluster_endpoint_port             = var.talos_k8s_cluster_endpoint_port

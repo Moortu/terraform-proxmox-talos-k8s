@@ -1,5 +1,5 @@
 locals {
-  cilium_manifest = file("${path.root}/manifests/cilium/cilium-manifest.yaml")
+  cilium_manifest = file("${path.root}/manifests/cilium/talos_basic_cilium_manifest.yaml")
 }
 
 # see https://registry.terraform.io/providers/siderolabs/talos/0.6.0/docs/resources/machine_configuration_apply
@@ -90,31 +90,28 @@ resource "talos_machine_bootstrap" "this" {
 #   }
 # }
 
-resource "time_sleep" "wait_for_talos_cluster_bootstrap" {
-  depends_on = [talos_machine_bootstrap.this]
-  create_duration = "3m"
-}
-
 
 resource "talos_cluster_kubeconfig" "kubeconfig" {
-  depends_on = [time_sleep.wait_for_talos_cluster_bootstrap]
-
+  depends_on = [talos_machine_bootstrap.this]
   client_configuration = var.talos_machine_secrets.client_configuration
   node                 = var.control_planes_network[0].ip
 }
 
 data "talos_client_configuration" "talosconfig" {
-  cluster_name         = "example-cluster"
+  depends_on = [talos_machine_bootstrap.this]
+  cluster_name         = var.talos_k8s_cluster_name
   client_configuration = var.talos_machine_secrets.client_configuration
   nodes                = [ for node in var.control_planes_network: node.ip ]
 }
 
 resource "local_sensitive_file" "export_talosconfig" {
+  depends_on = [ data.talos_client_configuration.talosconfig ]
   content    = data.talos_client_configuration.talosconfig.talos_config
   filename   = "${path.root}/generated/talosconfig" #rename to config, place in .talos
 }
 
 resource "local_sensitive_file" "export_kubeconfig" {
+  depends_on = [ talos_cluster_kubeconfig.kubeconfig ]
   content    = talos_cluster_kubeconfig.kubeconfig.kubeconfig_raw
   filename   = "${path.root}/generated/kubeconfig" #rename to config place in .kube
 }

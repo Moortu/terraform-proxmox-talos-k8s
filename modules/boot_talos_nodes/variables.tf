@@ -1,3 +1,9 @@
+variable "talos_k8s_cluster_name" {
+  description = "Name of the Talos Kubernetes cluster"
+  type        = string
+  default     = "talos-cluster"
+}
+
 variable "talos_k8s_cluster_domain" {
   description = "Domain name of the Talos Kubernetes cluster"
   type        = string
