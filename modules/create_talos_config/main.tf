@@ -39,7 +39,7 @@ data "talos_machine_configuration" "cp" {
   examples           = false
 
   config_patches = [
-    templatefile("${path.root}/talos-config-templates/common.yaml.tftpl", local.talos_mc_defaults),
+    templatefile("${path.root}/modules/talos-config-templates/common.yaml.tftpl", local.talos_mc_defaults),
   ]
 }
 
@@ -55,6 +55,6 @@ data "talos_machine_configuration" "wn" {
   examples           = false
 
   config_patches = [
-    templatefile("${path.root}/talos-config-templates/common.yaml.tftpl", local.talos_mc_defaults),
+    templatefile("${path.root}/modules/talos-config-templates/common.yaml.tftpl", local.talos_mc_defaults),
   ]
 }

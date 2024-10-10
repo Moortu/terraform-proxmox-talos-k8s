@@ -13,7 +13,7 @@ resource "talos_machine_configuration_apply" "control_planes" {
   endpoint = each.value.ip
 
   config_patches = [
-    templatefile("${path.root}/talos-config-templates/control-plane.yaml.tftpl", {
+    templatefile("${path.root}/modules/talos-config-templates/control-plane.yaml.tftpl", {
       topology_zone     = each.value.node_name,
       cluster_domain    = var.talos_k8s_cluster_domain,
       cluster_endpoint  = var.talos_k8s_cluster_endpoint,
@@ -39,7 +39,7 @@ resource "talos_machine_configuration_apply" "worker_nodes" {
   endpoint = each.value.ip
 
   config_patches = concat([
-    templatefile("${path.root}/talos-config-templates/worker-node.yaml.tftpl", {
+    templatefile("${path.root}/modules/talos-config-templates/worker-node.yaml.tftpl", {
       topology_zone     = each.value.node_name,
       cluster_domain    = var.talos_k8s_cluster_domain,
       network_interface = each.value.network_interface_name,
@@ -49,13 +49,13 @@ resource "talos_machine_configuration_apply" "worker_nodes" {
       ipv4_local        = each.value.ip,
       ipv4_vip          = var.talos_k8s_cluster_vip,
     }),
-    templatefile("${path.root}/talos-config-templates/node-labels.yaml.tftpl", {
+    templatefile("${path.root}/modules/talos-config-templates/node-labels.yaml.tftpl", {
       node_labels = "worker",
     })
   ],
     # [
     #   for disk in each.value.data_disks : templatefile(
-    #   "${path.root}/talos-config-templates/worker-node-disk.yaml.tftpl",
+    #   "${path.root}/modules/talos-config-templates/worker-node-disk.yaml.tftpl",
     #   {
     #     disk_device = "/dev/${disk.device_name}",
     #     mount_point = disk.mount_point,
@@ -76,29 +76,28 @@ resource "talos_machine_bootstrap" "this" {
 }
 
 # see https://registry.terraform.io/providers/siderolabs/talos/0.6.0/docs/data-sources/cluster_health
-# data "talos_cluster_health" "ready" {
-#   depends_on = [talos_machine_bootstrap.this]
+data "talos_cluster_health" "ready" {
+  depends_on = [talos_machine_bootstrap.this]
 
-#   client_configuration = var.talos_machine_secrets.client_configuration
-#   endpoints            = [var.talos_k8s_cluster_vip]
-#   control_plane_nodes  = [for i in var.control_planes_network : i.ip]
-#   # worker_nodes         = [for i in var.workers_network :i.ip]
+  client_configuration = var.talos_machine_secrets.client_configuration
+  endpoints            = [var.talos_k8s_cluster_vip]
+  control_plane_nodes  = [for i in var.control_planes_network : i.ip]
+  worker_nodes         = [for i in var.workers_network :i.ip]
 
-#   skip_kubernetes_checks = true
-#   timeouts = {
-#     read = "3m"
-#   }
-# }
+  timeouts = {
+    read = "10s"
+  }
+}
 
 
 resource "talos_cluster_kubeconfig" "kubeconfig" {
-  depends_on = [talos_machine_bootstrap.this]
+  depends_on = [data.talos_cluster_health.ready]
   client_configuration = var.talos_machine_secrets.client_configuration
   node                 = var.control_planes_network[0].ip
 }
 
 data "talos_client_configuration" "talosconfig" {
-  depends_on = [talos_machine_bootstrap.this]
+  depends_on = [data.talos_cluster_health.ready]
   cluster_name         = var.talos_k8s_cluster_name
   client_configuration = var.talos_machine_secrets.client_configuration
   nodes                = [ for node in var.control_planes_network: node.ip ]

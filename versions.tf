@@ -2,7 +2,7 @@ variable "talos_version" {
     # https://github.com/siderolabs/talos/releases
     description = "Talos version to use"
     type        = string
-    default     = "1.8.0"
+    default     = "1.8.1"
 }
 
 variable "k8s_version" {
@@ -21,7 +21,7 @@ variable "cilium_version" {
 
 variable "fluxcd_version" {
   # https://github.com/argoproj/argo-cd/releases
-  description = "ArgoCD version to use"
+  description = "FluxCD version to use"
   type        = string
   default     = "2.12.4"
 }
