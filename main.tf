@@ -1,50 +1,50 @@
 terraform {
-  required_version = ">= 1.7.0"
+  required_version = ">= 1.9.0"
 
   required_providers {
-    # see https://registry.terraform.io/providers/hashicorp/random
+    # see https://search.opentofu.org/provider/opentofu/random/v3.6.2
     # see https://github.com/hashicorp/terraform-provider-random
     random = {
-      source  = "hashicorp/random"
+      source  = "opentofu/random"
       version = ">= 3.6.3"
     }
-    # see https://registry.terraform.io/providers/bpg/proxmox
+    # see https://search.opentofu.org/provider/bpg/proxmox/latest
     # see https://github.com/bpg/terraform-provider-proxmox
     proxmox = {
       source  = "bpg/proxmox"
-      version = ">= 0.66.1"
+      version = ">= 0.74.0"
     }
-    # see https://registry.terraform.io/providers/siderolabs/talos
+    # see https://search.opentofu.org/provider/siderolabs/talos/latest
     # see https://github.com/siderolabs/terraform-provider-talos
     talos = {
       source  = "siderolabs/talos"
-      version = ">= 0.6.0"
+      version = ">= 0.7.1"
     }
-    # see https://registry.terraform.io/providers/hashicorp/helm
+    # see https://search.opentofu.org/provider/terraform-providers/helm/latest
     # see https://github.com/hashicorp/terraform-provider-helm
     helm = {
-      source  = "hashicorp/helm"
-      version = ">= 2.15.0"
+      source  = "terraform-providers/helm"
+      version = ">= 2.17.0"
     }
-    # see https://registry.terraform.io/providers/hashicorp/time
+    # see https://search.opentofu.org/provider/opentofu/time/latest
     # see https://github.com/hashicorp/terraform-provider-time
     time = {
-      source  = "hashicorp/time"
-      version = ">= 0.12.1"
+      source  = "opentofu/time"
+      version = ">= 0.13.0"
     }
-    # see https://registry.terraform.io/providers/fluxcd/flux/latest/docs
+    # see https://search.opentofu.org/provider/fluxcd/flux/latest
     # see https://github.com/fluxcd/terraform-provider-flux
     flux = {
       source  = "fluxcd/flux"
-      version = ">= 1.2"
+      version = ">= 1.5.1"
     }
-    # see https://registry.terraform.io/providers/integrations/github/latest
+    # see https://search.opentofu.org/provider/integrations/github/latest
     # see https://github.com/integrations/terraform-provider-github
     github = {
       source  = "integrations/github"
-      version = ">= 6.3.0"
+      version = ">= 6.6.0"
     }
-    # see https://registry.terraform.io/providers/ivoronin/macaddress
+    # see https://search.opentofu.org/provider/ivoronin/macaddress/latest
     # see https://github.com/ivoronin/terraform-provider-macaddress
     macaddress = {
       source  = "ivoronin/macaddress"
@@ -70,7 +70,7 @@ provider "proxmox" {
 
 
 locals {
-  talos_iso_image_location = "${var.talos_iso_destination_storage_pool}:iso/${replace(var.talos_iso_destination_filename, "%version%", var.talos_version)}"
+  talos_iso_image_location = "${var.talos_iso_destination_storage_pool}:iso/${replace(var.talos_iso_destination_filename, "%talos_version%", var.talos_version)}"
   talos_k8s_cluster_endpoint = "https://${var.talos_k8s_cluster_domain}:${var.talos_k8s_cluster_endpoint_port}"
 }
 
