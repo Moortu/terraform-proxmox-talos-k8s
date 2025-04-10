@@ -75,13 +75,44 @@ locals {
   ]
 }
 
-output "dns_configuration_guide" {
+# Add local variables for DNS formatting
+locals {
+  # Banner lines for DNS configuration output
+  dns_banner_line = "*******************************************************************************"
+  dns_header = "                      DNS CONFIGURATION FOR ${var.talos_k8s_cluster_name}                        "
+}
+
+output "zzz_2_dns_configuration_guide" {
   description = "DNS configuration summary for your cluster"
-  value = "\n# DNS CONFIGURATION FOR ${var.talos_k8s_cluster_name}\n\n# API/CONTROL PLANE VIP RECORD:\n${var.talos_k8s_cluster_domain}                IN    A    ${var.talos_k8s_cluster_vip}\napi.${var.talos_k8s_cluster_domain}            IN    A    ${var.talos_k8s_cluster_vip}\n\n# CONTROL PLANE NODE RECORDS:${join("", [
+  value = <<EOT
+${local.dns_banner_line}
+${local.dns_header}
+${local.dns_banner_line}
+
+# API/CONTROL PLANE VIP RECORDS
+
+  ${var.talos_k8s_cluster_domain}                IN    A    ${var.talos_k8s_cluster_vip}
+  api.${var.talos_k8s_cluster_domain}            IN    A    ${var.talos_k8s_cluster_vip}
+
+# CONTROL PLANE NODE RECORDS${join("", [
   for i, cp in local.all_control_planes : 
-    "\n${cp.name}.${var.talos_k8s_cluster_domain}    IN    A    ${var.talos_network_dhcp ? "DHCP (see VM console)" : cidrhost(var.talos_network_cidr, i + var.control_plane_first_ip)}"
-])}\n\n# WORKER NODE RECORDS:${join("", [
+    "\n  ${format("%-40s", "${cp.name}.${var.talos_k8s_cluster_domain}")}IN    A    ${var.talos_network_dhcp ? "DHCP (see VM console)" : cidrhost(var.talos_network_cidr, i + var.control_plane_first_ip)}"
+])}
+
+# WORKER NODE RECORDS${join("", [
   for i, worker in local.all_workers : 
-    "\n${worker.name}.${var.talos_k8s_cluster_domain}    IN    A    ${var.talos_network_dhcp ? "DHCP (see VM console)" : cidrhost(var.talos_network_cidr, i + var.worker_node_first_ip)}"
-])}\n"
+    "\n  ${format("%-40s", "${worker.name}.${var.talos_k8s_cluster_domain}")}IN    A    ${var.talos_network_dhcp ? "DHCP (see VM console)" : cidrhost(var.talos_network_cidr, i + var.worker_node_first_ip)}"
+])}
+
+NOTE: Add these entries to your DNS server or /etc/hosts file as shown above.
+      These addresses must be accessible from your machines that need to connect to the cluster.
+
+${local.dns_banner_line}
+EOT
+
+  # Ensure this output appears last in the plan
+  depends_on = [
+    module.control_plane_vms,
+    module.workers_vms
+  ]
 }
