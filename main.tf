@@ -112,8 +112,16 @@ locals {
   metrics_server_manifest = replace(var.metrics_server_manifest_url, "%version%", var.metrics_server_version)
   
   # GitOps configuration
-  using_gitops_for_cilium = (var.deploy_fluxcd && var.fluxcd_cilium_enabled) || (var.deploy_argocd && var.argocd_cilium_enabled)
-  include_cilium_inline_manifests = var.include_cilium_inline_manifests
+  deploy_flux = try(var.deploy_gitops, "none") == "flux" || try(var.deploy_gitops, "none") == "both" || var.deploy_fluxcd
+  deploy_argo = try(var.deploy_gitops, "none") == "argo" || try(var.deploy_gitops, "none") == "both" || var.deploy_argocd
+  
+  # Determine Cilium management approach
+  cilium_managed_by_flux = (try(var.cilium_management, "inline") == "flux" || try(var.cilium_management, "inline") == "both" || var.fluxcd_cilium_enabled) && local.deploy_flux
+  cilium_managed_by_argo = (try(var.cilium_management, "inline") == "argo" || try(var.cilium_management, "inline") == "both" || var.argocd_cilium_enabled) && local.deploy_argo
+  using_gitops_for_cilium = local.cilium_managed_by_flux || local.cilium_managed_by_argo
+  # Automatically derive include_cilium_inline_manifests from cilium_management
+  # Only include inline manifests if explicitly set to "inline" and not using GitOps
+  include_cilium_inline_manifests = try(var.cilium_management, "inline") == "inline" && !local.using_gitops_for_cilium
   
   # Kubeconfig path for GitOps tools
   kubeconfig_path = "${path.root}/talos-kubeconfig"
@@ -178,6 +186,7 @@ module "workers_vms" {
 }
 
 module "cilium" {
+  count  = var.include_cilium_inline_manifests ? 1 : 0
   source = "./modules/generate_cilium_manifest"
   
   cilium_version = var.cilium_version  
@@ -205,8 +214,8 @@ module "create_talos_config" {
   talos_install_disk_device       = var.talos_install_disk_device
   talos_control_plane_vms_network = module.control_plane_vms.talos_control_plane_vms_network
   talos_install_image_url         = module.talos_iso.talos_image_url
-  cilium_manifests                = module.cilium.cilium_manifests
-  cilium_patch                    = module.cilium.talos_patch
+  cilium_manifests                = var.include_cilium_inline_manifests ? module.cilium[0].cilium_manifests : ""
+  cilium_patch                    = var.include_cilium_inline_manifests ? module.cilium[0].talos_patch : {}
   # Include Cilium manifests inline only if we're not using either FluxCD or ArgoCD for Cilium
   include_cilium_inline_manifests = var.include_cilium_inline_manifests && !local.using_gitops_for_cilium
 } 
@@ -230,12 +239,12 @@ module "boot_talos_nodes" {
   talos_machine_configuration_control_planes  = module.create_talos_config.talos_machine_configuration_control_planes
   talos_machine_configuration_workers         = module.create_talos_config.talos_machine_configuration_workers
   talos_machine_secrets                       = module.create_talos_config.talos_machine_secrets
-  cilium_manifests                            = module.cilium.cilium_manifests
+  cilium_manifests                            = var.include_cilium_inline_manifests ? module.cilium[0].cilium_manifests : ""
 }
 
 # FluxCD deployment (optional)
 module "fluxcd" {
-  count      = var.deploy_fluxcd ? 1 : 0
+  count      = local.deploy_flux ? 1 : 0
   depends_on = [module.boot_talos_nodes]
   source     = "./modules/fluxcd"
   
@@ -246,31 +255,52 @@ module "fluxcd" {
   # Kubernetes configuration
   kubernetes_config_path = local.kubeconfig_path
   
-  # Git configuration for Flux
-  git_provider   = var.fluxcd_git_provider
-  git_token      = var.fluxcd_git_token
-  git_owner      = var.fluxcd_git_owner
-  git_repository = var.fluxcd_git_repository
-  git_branch     = var.fluxcd_git_branch
-  git_path       = var.fluxcd_git_path
-  git_url        = var.fluxcd_git_url
+  # Git configuration for Flux - with fallbacks to old variable names for backward compatibility
+  git_provider   = try(var.gitops_git_provider, "") != "" ? var.gitops_git_provider : var.fluxcd_git_provider
+  git_token      = try(var.gitops_git_token, "") != "" ? var.gitops_git_token : var.fluxcd_git_token
+  git_owner      = try(var.gitops_git_owner, "") != "" ? var.gitops_git_owner : var.fluxcd_git_owner
+  git_repository = try(var.fluxcd_repository_name, "") != "" ? var.fluxcd_repository_name : var.fluxcd_git_repository
+  git_branch     = try(var.fluxcd_branch, "") != "" ? var.fluxcd_branch : var.fluxcd_git_branch
+  git_path       = try(var.fluxcd_path, "") != "" ? var.fluxcd_path : var.fluxcd_git_path
+  git_url        = try(var.gitops_git_url, "") != "" ? var.gitops_git_url : var.fluxcd_git_url
   
   # Cilium configuration
-  cilium_enabled = var.fluxcd_cilium_enabled
-  cilium_version = module.cilium.cilium_version
-  cilium_values  = module.cilium.cilium_values
+  cilium_enabled = local.cilium_managed_by_flux
+  cilium_version = var.include_cilium_inline_manifests && length(module.cilium) > 0 ? module.cilium[0].cilium_version : var.cilium_version
+  # Provide a properly structured empty object that matches the cilium_values schema
+  cilium_values  = var.include_cilium_inline_manifests && length(module.cilium) > 0 ? module.cilium[0].cilium_values : {
+    ipam = {
+      mode = "kubernetes"
+    }
+    kubeProxyReplacement = "false"
+    securityContext = {
+      capabilities = {
+        ciliumAgent = []
+        cleanCiliumState = []
+      }
+    }
+    cgroup = {
+      autoMount = {
+        enabled = false
+      }
+      hostRoot = "/sys/fs/cgroup"
+    }
+    # These are added when kube-proxy replacement is enabled
+    k8sServiceHost = "localhost"
+    k8sServicePort = "7445"
+  }
   managed_by_talos = local.include_cilium_inline_manifests
   
   # Flux-specific configurations
   flux_version   = var.fluxcd_version
   flux_namespace = var.fluxcd_namespace
   
-  wait_for_resources = var.fluxcd_wait_for_resources
+  wait_for_resources = try(var.gitops_wait_for_resources, null) != null ? var.gitops_wait_for_resources : var.fluxcd_wait_for_resources
 }
 
 # ArgoCD deployment (optional)
 module "argocd" {
-  count      = var.deploy_argocd ? 1 : 0
+  count      = local.deploy_argo ? 1 : 0
   depends_on = [module.boot_talos_nodes]
   source     = "./modules/argocd"
   
@@ -282,18 +312,39 @@ module "argocd" {
   # Kubernetes configuration
   kubernetes_config_path = local.kubeconfig_path
   
-  # Git configuration for ArgoCD
-  git_provider   = var.argocd_git_provider
-  git_token      = var.argocd_git_token
-  git_owner      = var.argocd_git_owner
-  git_repository = var.argocd_git_repository
-  git_branch     = var.argocd_git_branch
-  git_url        = var.argocd_git_url
+  # Git configuration for ArgoCD - with fallbacks to old variable names for backward compatibility
+  git_provider   = try(var.gitops_git_provider, "") != "" ? var.gitops_git_provider : var.argocd_git_provider
+  git_token      = try(var.gitops_git_token, "") != "" ? var.gitops_git_token : var.argocd_git_token
+  git_owner      = try(var.gitops_git_owner, "") != "" ? var.gitops_git_owner : var.argocd_git_owner
+  git_repository = try(var.argocd_repository_name, "") != "" ? var.argocd_repository_name : var.argocd_git_repository
+  git_branch     = try(var.argocd_branch, "") != "" ? var.argocd_branch : var.argocd_git_branch
+  git_url        = try(var.gitops_git_url, "") != "" ? var.gitops_git_url : var.argocd_git_url
   
   # Cilium configuration
-  cilium_enabled = var.argocd_cilium_enabled
-  cilium_version = module.cilium.cilium_version
-  cilium_values  = module.cilium.cilium_values
+  cilium_enabled = local.cilium_managed_by_argo
+  cilium_version = var.include_cilium_inline_manifests && length(module.cilium) > 0 ? module.cilium[0].cilium_version : var.cilium_version
+  # Provide a properly structured empty object that matches the cilium_values schema
+  cilium_values  = var.include_cilium_inline_manifests && length(module.cilium) > 0 ? module.cilium[0].cilium_values : {
+    ipam = {
+      mode = "kubernetes"
+    }
+    kubeProxyReplacement = "false"
+    securityContext = {
+      capabilities = {
+        ciliumAgent = []
+        cleanCiliumState = []
+      }
+    }
+    cgroup = {
+      autoMount = {
+        enabled = false
+      }
+      hostRoot = "/sys/fs/cgroup"
+    }
+    # These are added when kube-proxy replacement is enabled
+    k8sServiceHost = "localhost"
+    k8sServicePort = "7445"
+  }
   managed_by_talos = local.include_cilium_inline_manifests
   
   # ArgoCD-specific configurations
@@ -301,5 +352,5 @@ module "argocd" {
   argocd_namespace = var.argocd_namespace
   argocd_admin_password = var.argocd_admin_password
   
-  wait_for_resources = var.argocd_wait_for_resources
+  wait_for_resources = try(var.gitops_wait_for_resources, null) != null ? var.gitops_wait_for_resources : var.argocd_wait_for_resources
 }

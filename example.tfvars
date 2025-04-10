@@ -119,53 +119,58 @@ proxmox_nodes = {
 #######################################################################
 # Cilium is the Container Network Interface (CNI) used in this cluster
 
-# Cilium deployment method selection:
-# - true = Deploy Cilium directly through Talos (recommended for initial setup)
-# - false = Let GitOps tools manage Cilium (for advanced users)
-include_cilium_inline_manifests = true
+# Which tool should manage Cilium: 'inline', 'flux', 'argo', or 'both'
+# - inline: Managed by Talos inline manifests (recommended for initial setup)
+# - flux: Managed by FluxCD (requires deploy_gitops = 'flux' or 'both')
+# - argo: Managed by ArgoCD (requires deploy_gitops = 'argo' or 'both')
+# - both: Managed by both FluxCD and ArgoCD (requires deploy_gitops = 'both')
+cilium_management = "inline"
 
-# GitOps tool selection (can deploy one or both)
-deploy_fluxcd = false  # Set to true to deploy FluxCD
-deploy_argocd = false  # Set to true to deploy ArgoCD
+# Choose which GitOps tool(s) to deploy: 'none', 'flux', 'argo', or 'both'
+# - none: Don't deploy any GitOps tools
+# - flux: Deploy only FluxCD
+# - argo: Deploy only ArgoCD
+# - both: Deploy both FluxCD and ArgoCD
+deploy_gitops = "none"  # Set to 'flux', 'argo', or 'both' to enable GitOps tools
 
 #######################################################################
-# FLUXCD CONFIGURATION (Optional, only if deploy_fluxcd = true)
+# COMMON GIT PROVIDER CONFIGURATION
 #######################################################################
-# FluxCD Git repository settings
-fluxcd_git_provider   = "github"     # Options: "github", "gitlab", "gitea"
-fluxcd_git_token      = ""           # [REQUIRED IF FLUXCD ENABLED] Personal access token
-fluxcd_git_owner      = "username"   # [REQUIRED IF FLUXCD ENABLED] Git username or organization
-fluxcd_git_repository = "gitops-repo" # [REQUIRED IF FLUXCD ENABLED] Repository name
-fluxcd_git_branch     = "main"       # Git branch to use
-fluxcd_git_path       = "clusters/talos-cluster" # Path within repo for cluster configs
+# Common Git Provider Settings (used by both FluxCD and ArgoCD)
+gitops_git_provider = "github"  # Options: "github", "gitlab", "gitea"
+gitops_git_token    = ""       # [REQUIRED IF GITOPS ENABLED] Personal access token
+gitops_git_owner    = "username" # [REQUIRED IF GITOPS ENABLED] Git username or organization
+gitops_git_url      = ""       # e.g., "https://git.example.com" (leave empty for github.com)
 
-# For self-hosted GitLab/Gitea only (leave empty for github.com)
-fluxcd_git_url        = ""           # e.g., "https://gitlab.example.com"
+# Common wait for resources setting
+gitops_wait_for_resources = true
 
+#######################################################################
+# FLUXCD REPOSITORY CONFIGURATION (Optional, only if deploy_gitops = 'flux' or 'both')
+#######################################################################
+fluxcd_repository_name = "fluxcd_repo"  # Git repository name for FluxCD
+fluxcd_branch = "main"                  # Git branch for FluxCD
+fluxcd_path = "clusters/talos-cluster"  # Path within the Git repository for FluxCD
+
+# These variables are kept for backward compatibility
 # FluxCD Cilium Management
-fluxcd_cilium_enabled = true        # Whether FluxCD should manage Cilium
-# Note: When both include_cilium_inline_manifests=true and fluxcd_cilium_enabled=true,
+fluxcd_cilium_enabled = true  # Whether FluxCD should manage Cilium
+# Note: When both include_cilium_inline_manifests=true and cilium_management='flux',
 # FluxCD's Cilium HelmRelease will be created but suspended until you set
 # include_cilium_inline_manifests=false
 
 #######################################################################
-# ARGOCD CONFIGURATION (Optional, only if deploy_argocd = true)
+# ARGOCD REPOSITORY CONFIGURATION (Optional, only if deploy_gitops = 'argo' or 'both')
 #######################################################################
-# ArgoCD Git repository settings
-argocd_git_provider   = "github"     # Options: "github", "gitlab", "gitea"
-argocd_git_token      = ""           # [REQUIRED IF ARGOCD ENABLED] Personal access token
-argocd_git_owner      = "username"   # [REQUIRED IF ARGOCD ENABLED] Git username or organization
-argocd_git_repository = "gitops-repo" # [REQUIRED IF ARGOCD ENABLED] Repository name
-argocd_git_branch     = "main"       # Git branch to use
+argocd_repository_name = "argocd_repo"  # Git repository name for ArgoCD
+argocd_branch = "main"                 # Git branch for ArgoCD
 
-# For self-hosted GitLab/Gitea only (leave empty for github.com)
-argocd_git_url        = ""           # e.g., "https://gitlab.example.com"
-
+# These variables are kept for backward compatibility
 # ArgoCD Cilium Management
-argocd_cilium_enabled = true        # Whether ArgoCD should manage Cilium
-# Note: When both include_cilium_inline_manifests=true and argocd_cilium_enabled=true,
+argocd_cilium_enabled = true  # Whether ArgoCD should manage Cilium
+# Note: When both include_cilium_inline_manifests=true and cilium_management='argo',
 # ArgoCD's Cilium Application will be created but suspended until you set
 # include_cilium_inline_manifests=false
 
 # ArgoCD Admin Password
-argocd_admin_password = ""          # Leave empty to auto-generate a password
+argocd_admin_password = ""  # Leave empty to auto-generate a password
