@@ -2,7 +2,7 @@
 .development
 .terraform
 *.tfstate*
-# *.auto.tfvars
+*.auto.tfvars
 *.tfplan
 *.tmp
 kubeconfig.y*
