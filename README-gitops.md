@@ -1,15 +1,31 @@
 # GitOps Implementation Guide
 
-This project supports flexible GitOps implementation for managing Kubernetes resources, with special attention to Cilium CNI deployment.
+This project supports flexible GitOps implementation for managing Kubernetes resources, with special attention to Cilium CNI deployment. The modular design allows you to choose your preferred GitOps tool(s) and transition smoothly between deployment methods.
 
 ## GitOps Options
 
 You can choose between three main deployment options:
 
 1. **No GitOps**: Cilium deployed as inline manifests in Talos (default)
+   - Simplest option for getting started
+   - Cilium manifests included directly in Talos machine configuration
+   - Updates require reapplying Terraform/OpenTofu configuration
+   
 2. **FluxCD**: Cilium managed through FluxCD resources
+   - Declarative, Git-based approach
+   - Automated reconciliation of cluster state
+   - Supports multiple Git providers and custom repository structures
+   - Can manage its own updates after initial deployment
+   
 3. **ArgoCD**: Cilium managed through ArgoCD resources
+   - UI-driven GitOps with strong visualization
+   - Application-centric approach with dependency management
+   - Supports multiple Git providers and custom repository structures
+   - Can manage its own updates after initial deployment
+   
 4. **Both**: Use both FluxCD and ArgoCD (typically for evaluation or migration)
+   - Useful for comparing tools or migrating between them
+   - Allows gradual transition between GitOps solutions
 
 ## Configuration Variables
 
@@ -136,7 +152,128 @@ The setup is designed to allow smooth transitions between Cilium management meth
 Both FluxCD and ArgoCD modules support multiple Git providers:
 
 1. **GitHub**: Standard integration with personal access tokens
-2. **GitLab**: Both gitlab.com and self-hosted instances
-3. **Gitea**: Self-hosted Gitea instances
+   - Requires: Personal Access Token with `repo` scope
+   - Example configuration:
+     ```hcl
+     fluxcd_git_provider = "github"
+     fluxcd_git_token = "ghp_xxxxxxxxxxxxxxxxxxxx"
+     fluxcd_git_owner = "yourusername"
+     fluxcd_git_repository = "k8s-gitops"
+     ```
 
-For self-hosted instances, use the appropriate `*_git_url` parameter.
+2. **GitLab**: Both gitlab.com and self-hosted instances
+   - Requires: Personal Access Token with `api`, `read_repository`, and `write_repository` scopes
+   - For self-hosted instances, also specify the GitLab URL
+   - Example configuration for self-hosted instance:
+     ```hcl
+     argocd_git_provider = "gitlab"
+     argocd_git_token = "glpat-xxxxxxxxxxxxxxxxxxxx"
+     argocd_git_owner = "yourusername"
+     argocd_git_repository = "k8s-gitops"
+     argocd_git_url = "https://gitlab.example.com"
+     ```
+
+3. **Gitea**: Self-hosted Gitea instances
+   - Requires: Personal Access Token with appropriate permissions
+   - Always requires the Gitea URL
+   - Example configuration:
+     ```hcl
+     fluxcd_git_provider = "gitea"
+     fluxcd_git_token = "gta_xxxxxxxxxxxxxxxxxxxx"
+     fluxcd_git_owner = "yourusername"
+     fluxcd_git_repository = "k8s-gitops"
+     fluxcd_git_url = "https://gitea.example.com"
+     ```
+
+## Repository Structure Requirements
+
+When using GitOps tools, you need to prepare your Git repository accordingly:
+
+### For FluxCD
+
+1. Create a repository for your GitOps configuration
+2. The repository structure should align with your `fluxcd_git_path` setting (default: `clusters/<cluster-name>`)
+3. Initial folder structure will be created by FluxCD bootstrap process
+4. You can pre-create this structure with the following minimal layout:
+   ```
+   clusters/
+     your-cluster-name/
+       # FluxCD will populate this with configuration
+   ```
+
+### For ArgoCD
+
+1. Create a repository for your GitOps configuration
+2. The repository can follow any structure - ArgoCD will be configured to point to appropriate paths
+3. A simple recommended structure:
+   ```
+   apps/
+     cilium/
+       # Cilium configuration will be placed here
+     system/
+       # System applications
+     workloads/
+       # Your workloads
+   ```
+
+## GitOps Self-Management Capabilities
+
+Both FluxCD and ArgoCD can manage their own deployment after initial bootstrap:
+
+### FluxCD Self-Management
+
+After deployment, FluxCD can manage itself through the HelmRelease resource. This will be set up automatically if you deploy FluxCD with this project. Benefits:
+
+- Update FluxCD version through Git commits
+- Modify FluxCD configuration through GitOps workflow
+- Add components or disable unused components
+
+Example HelmRelease that will be created:
+```yaml
+apiVersion: helm.toolkit.fluxcd.io/v2beta1
+kind: HelmRelease
+metadata:
+  name: flux-system
+  namespace: flux-system
+spec:
+  chart:
+    spec:
+      chart: flux2
+      sourceRef:
+        kind: HelmRepository
+        name: fluxcd
+      version: 2.x.y  # Update this for new versions
+  interval: 1h0m0s
+  values:
+    # Your FluxCD configuration
+```
+
+### ArgoCD Self-Management
+
+ArgoCD can also manage itself through the Application resource. After initial deployment, you can:
+
+- Update ArgoCD version through Git commits
+- Add new components or features
+- Customize the ArgoCD UI and experience
+
+Example Application that will be created:
+```yaml
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: argocd
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://your-git-repo.git
+    path: argocd/
+    targetRevision: HEAD
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: argocd
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+```
