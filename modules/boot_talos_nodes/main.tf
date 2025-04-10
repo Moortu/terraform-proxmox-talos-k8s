@@ -1,6 +1,4 @@
-locals {
-  cilium_manifest = file("${path.root}/manifests/cilium/talos_basic_cilium_manifest.yaml")
-}
+# No need for a local variable since we're using the passed-in cilium_manifests variable
 
 # see https://registry.terraform.io/providers/siderolabs/talos/0.6.0/docs/resources/machine_configuration_apply
 resource "talos_machine_configuration_apply" "control_planes" {
@@ -23,7 +21,8 @@ resource "talos_machine_configuration_apply" "control_planes" {
       hostname          = each.value.vm_name,
       ipv4_local        = each.value.ip,
       ipv4_vip          = var.talos_k8s_cluster_vip,
-      inline_manifests  = local.cilium_manifest
+      taints_enabled    = lookup(each.value, "taints_enabled", true),
+      inline_manifests  = var.cilium_manifests
     })
   ]
 }

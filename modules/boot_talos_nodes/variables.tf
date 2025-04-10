@@ -39,7 +39,7 @@ variable "talos_network_ip_prefix" {
 }
 
 variable "control_planes_network" {
-  description = "Talos worker network info"
+  description = "Talos control plane network info"
   type = list(object({
       type = string
       node_name = string
@@ -48,6 +48,7 @@ variable "control_planes_network" {
       network_interface_name = string
       mac_address = string
       ip = string
+      taints_enabled = optional(bool, true)
     }))
 }
 
@@ -76,4 +77,9 @@ variable "talos_machine_configuration_workers" {
 
 variable "talos_machine_secrets" {
   type = any
+}
+
+variable "cilium_manifests" {
+  description = "The generated Cilium manifests"
+  type        = string
 }

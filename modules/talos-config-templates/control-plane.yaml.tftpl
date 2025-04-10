@@ -27,7 +27,7 @@ machine:
           - ${cluster_domain}
 
 cluster:
-  allowSchedulingOnMasters: true
+  allowSchedulingOnMasters: ${!taints_enabled}
   inlineManifests:
     - name: cilium
       contents: |

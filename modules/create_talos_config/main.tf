@@ -12,8 +12,25 @@ locals {
     install_disk_device = var.talos_install_disk_device,
     install_image_url   = var.talos_install_image_url
   }
+  # Create a YAML patch for the CNI and kube-proxy settings
+  # This will be merged with the Cilium patch from the generate_cilium_manifest module
+  cilium_cni_patch = yamlencode(var.cilium_patch)
+  
+  # Create the inline manifest configuration for Cilium
+  cilium_inline_manifest = var.include_cilium_inline_manifests ? {
+    cluster = {
+      inlineManifests = [
+        {
+          name = "cilium"
+          contents = var.cilium_manifests
+        }
+      ]
+    }
+  } : {}
+  
+  # Convert to YAML for the patch, only if we're including the manifests
+  cilium_inline_manifest_patch = var.include_cilium_inline_manifests ? yamlencode(local.cilium_inline_manifest) : ""
 }
-
 # see https://registry.terraform.io/providers/siderolabs/talos/0.6.0/docs/resources/machine_secrets
 resource "talos_machine_secrets" "talos" {
   talos_version = "v${var.talos_version}"
@@ -38,8 +55,13 @@ data "talos_machine_configuration" "cp" {
   docs               = false
   examples           = false
 
-  config_patches = [
+  config_patches = var.include_cilium_inline_manifests ? [
     templatefile("${path.root}/modules/talos-config-templates/common.yaml.tftpl", local.talos_mc_defaults),
+    local.cilium_cni_patch,
+    local.cilium_inline_manifest_patch,
+  ] : [
+    templatefile("${path.root}/modules/talos-config-templates/common.yaml.tftpl", local.talos_mc_defaults),
+    local.cilium_cni_patch,
   ]
 }
 
@@ -56,5 +78,6 @@ data "talos_machine_configuration" "wn" {
 
   config_patches = [
     templatefile("${path.root}/modules/talos-config-templates/common.yaml.tftpl", local.talos_mc_defaults),
+    local.cilium_cni_patch,
   ]
 }

@@ -7,12 +7,22 @@ variable "talos_k8s_cluster_name" {
 variable "talos_k8s_cluster_vip" {
   description = "Virtual IP of the Talos Kubernetes cluster"
   type        = string
+  
+  validation {
+    condition     = can(regex("^([0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3})$", var.talos_k8s_cluster_vip))
+    error_message = "The talos_k8s_cluster_vip value must be a valid IPv4 address (e.g., 10.0.10.1)."
+  }
 }
 
 variable "talos_k8s_cluster_domain" {
   description = "Domain name of the Talos Kubernetes cluster"
   type        = string
   default     = "talos-cluster.local"
+  
+  validation {
+    condition     = can(regex("^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)*$", var.talos_k8s_cluster_domain))
+    error_message = "The talos_k8s_cluster_domain must be a valid domain name."
+  }
 }
 
 variable "talos_k8s_cluster_endpoint_port" {
@@ -25,12 +35,22 @@ variable "control_plane_first_ip" {
   description = "First ip of a control-plane"
   type        = number
   default     = 161
+  
+  validation {
+    condition     = var.control_plane_first_ip > 1 && var.control_plane_first_ip < 254
+    error_message = "The control_plane_first_ip must be between 2 and 253 to allow for valid IP addresses."
+  }
 }
 
 variable "worker_node_first_ip" {
   description = "First ip of a worker node"
   type        = number
   default     = 171
+  
+  validation {
+    condition     = var.worker_node_first_ip > 1 && var.worker_node_first_ip < 254
+    error_message = "The worker_node_first_ip must be between 2 and 253 to allow for valid IP addresses."
+  }
 }
 
 variable "talos_install_disk_device" {

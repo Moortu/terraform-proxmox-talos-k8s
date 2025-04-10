@@ -1,9 +1,14 @@
 locals {
-  vm_control_planes = flatten([
+  # First collect all control planes
+  vm_control_planes_unsorted = flatten([
     for node_name, node in var.proxmox_nodes : [
       for control_plane in node.control_planes : merge(control_plane, { node_name = node_name })
     ]
   ])
+  
+  # Sort control planes by name for consistent IP assignment
+  vm_control_planes_map = { for cp in local.vm_control_planes_unsorted : cp.name => cp }
+  vm_control_planes = [ for name in sort(keys(local.vm_control_planes_map)) : local.vm_control_planes_map[name] ]
 
   vm_control_planes_count = length(local.vm_control_planes)
 }
@@ -44,7 +49,7 @@ resource "proxmox_virtual_environment_vm" "create_talos_control_plane_vms" {
   initialization {
     ip_config {
       ipv4 {
-        address = var.talos_network_dhcp ? "dhcp" : "${cidrhost(var.talos_network_cidr, each.key + var.control_plane_first_ip)}/${split("/", var.talos_network_cidr)[1]}"
+        address = var.talos_network_dhcp ? "dhcp" : "${cidrhost(var.talos_network_cidr, parseint(each.key, 10) + var.control_plane_first_ip)}/${split("/", var.talos_network_cidr)[1]}"
         gateway = var.talos_network_dhcp ? null : var.talos_network_gateway
       }
     }
@@ -56,7 +61,6 @@ resource "proxmox_virtual_environment_vm" "create_talos_control_plane_vms" {
   }
 
   cdrom {
-    enabled = true
     file_id = var.talos_iso_image_location
   }
 

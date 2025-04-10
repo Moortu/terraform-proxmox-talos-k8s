@@ -36,7 +36,21 @@ variable "talos_version" {
 }
 
 variable "talos_iso_image_location" {
-  description = "talos iso image location"
+  description = "Central talos iso image location (used when central_iso_storage is true)"
+  type        = string
+  default     = null
+}
+
+variable "talos_iso_node_paths" {
+  description = "Map of node names to ISO file paths (used when central_iso_storage is false)"
+  type        = map(string)
+  default     = {}
+}
+
+variable "central_iso_storage" {
+  description = "If true, use the central ISO storage location for all nodes"
+  type        = bool
+  default     = true
 }
 
 variable "worker_node_name_prefix" {

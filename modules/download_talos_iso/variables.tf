@@ -6,9 +6,15 @@ variable "talos_iso_destination_filename" {
 }
 
 variable "talos_iso_destination_server" {
-  description = "Proxmox server to store the Talos iso image on"
+  description = "Proxmox server to store the Talos iso image on (only used when central_iso_storage is true)"
   type        = string
   default     = "" #pve-node-01
+}
+
+variable "central_iso_storage" {
+  description = "If true, download ISO to a single location and use it for all nodes. If false, download to each Proxmox node."
+  type        = bool
+  default     = true
 }
 
 variable "talos_iso_destination_storage_pool" {
@@ -23,6 +29,8 @@ variable "talos_version" {
     type        = string
     default     = "1.8.0"
 }
+
+
 
 variable "proxmox_nodes" {
   description = "Proxmox servers on which the talos cluster will be deployed"

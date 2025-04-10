@@ -1,9 +1,14 @@
 locals {
-  vm_workers = flatten([
+  # First collect all worker nodes
+  vm_workers_unsorted = flatten([
     for node_name, node in var.proxmox_nodes : [
       for worker in node.workers : merge(worker, { node_name = node_name })
     ]
   ])
+  
+  # Sort workers by name for consistent IP assignment
+  vm_workers_map = { for worker in local.vm_workers_unsorted : worker.name => worker }
+  vm_workers = [ for name in sort(keys(local.vm_workers_map)) : local.vm_workers_map[name] ]
 
   vm_worker_count = length(local.vm_workers)
 }
@@ -44,7 +49,7 @@ resource "proxmox_virtual_environment_vm" "talos_worker_vms" {
   initialization {
     ip_config {
       ipv4 {
-        address = var.talos_network_dhcp ? "dhcp" : "${cidrhost(var.talos_network_cidr, each.key + var.worker_node_first_ip)}/${split("/", var.talos_network_cidr)[1]}"
+        address = var.talos_network_dhcp ? "dhcp" : "${cidrhost(var.talos_network_cidr, parseint(each.key, 10) + var.worker_node_first_ip)}/${split("/", var.talos_network_cidr)[1]}"
         gateway = var.talos_network_dhcp ? null : var.talos_network_gateway
       }
     }
@@ -56,7 +61,6 @@ resource "proxmox_virtual_environment_vm" "talos_worker_vms" {
   }
 
   cdrom {
-    enabled = true
     file_id = var.talos_iso_image_location
   }
 

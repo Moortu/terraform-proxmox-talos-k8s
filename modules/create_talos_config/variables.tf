@@ -65,3 +65,19 @@ variable "talos_control_plane_vms_network" {
     ip                     = string
   }))
 }
+
+variable "cilium_manifests" {
+  description = "The generated Cilium manifests to include in the Talos configuration"
+  type        = string
+}
+
+variable "cilium_patch" {
+  description = "The Talos configuration patch for Cilium CNI settings"
+  type        = map(any)
+}
+
+variable "include_cilium_inline_manifests" {
+  description = "Whether to include Cilium manifests inline in the Talos configuration (set to false when GitOps takes over Cilium management)"
+  type        = bool
+  default     = true
+}

@@ -25,6 +25,8 @@ variable "proxmox_nodes" {
       name = optional(string)
       # Additional kubernetes node labels to add to the worker node(s)
       node_labels = optional(map(string), {})
+      # Whether to taint the control plane node to prevent workloads from running on it
+      taints_enabled = optional(bool, true)
       # The name of the network bridge on the Proxmox host
       network_bridge = optional(string, "vmbr0")
       # Predefined mac address to be used by the vm

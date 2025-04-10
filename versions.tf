@@ -3,6 +3,11 @@ variable "talos_version" {
     description = "Talos version to use"
     type        = string
     default     = "1.9.5"
+    
+    validation {
+      condition     = can(regex("^\\d+\\.\\d+\\.\\d+$", var.talos_version))
+      error_message = "The talos_version must be a valid semantic version (e.g., 1.9.5)."
+    }
 }
 
 variable "k8s_version" {
@@ -11,6 +16,11 @@ variable "k8s_version" {
     description = "Kubernetes version to use"
     type        = string
     default     = "1.31.6"
+    
+    validation {
+      condition     = can(regex("^\\d+\\.\\d+\\.\\d+$", var.k8s_version))
+      error_message = "The k8s_version must be a valid semantic version (e.g., 1.31.6)."
+    }
 }
 
 variable "cilium_version" {
@@ -18,21 +28,14 @@ variable "cilium_version" {
   description = "Cilium Helm version to use"
   type        = string
   default     = "1.17.2"
+  
+  validation {
+    condition     = can(regex("^\\d+\\.\\d+\\.\\d+$", var.cilium_version))
+    error_message = "The cilium_version must be a valid semantic version (e.g., 1.17.2)."
+  }
 }
 
-variable "fluxcd_version" {
-  # https://github.com/fluxcd/flux2/releases
-  description = "FluxCD version to use"
-  type        = string
-  default     = "2.5.1"
-}
-
-variable "argocd_version" {
-  # https://github.com/argoproj/argo-cd/releases
-  description = "ArgoCD version to use"
-  type        = string
-  default     = "2.14.8"
-}
+# GitOps tool versions are defined in vars-gitops.tf
 
 variable "metrics_server_version" {
   # https://github.com/kubernetes-sigs/metrics-server/releases
