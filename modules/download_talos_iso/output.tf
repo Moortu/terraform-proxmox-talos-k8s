@@ -5,9 +5,19 @@ output "talos_iso" {
   value = var.central_iso_storage ? "Downloaded to central location" : "Downloaded to each node"
 }
 
-output "talos_image_url" {
-  description = "URL of the Talos ISO image"
-  value       = data.talos_image_factory_urls.this.urls.iso_secureboot
+output "talos_iso_url" {
+  description = "URL of the Talos ISO image (secureboot version)"
+  value       = data.talos_image_factory_urls.generated_url.urls.iso_secureboot
+}
+
+output "talos_installer_image_url" {
+  description = "URL of the Talos installer image (secureboot version)"
+  value       = data.talos_image_factory_urls.generated_url.urls.installer_secureboot
+}
+
+output "debug_download_url" {
+  description = "The exact URL being used to download the Talos ISO"
+  value       = local.talos_iso_download_url
 }
 
 output "talos_iso_locations" {

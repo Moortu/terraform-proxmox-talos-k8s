@@ -11,12 +11,23 @@ locals {
   vm_control_planes = [ for name in sort(keys(local.vm_control_planes_map)) : local.vm_control_planes_map[name] ]
 
   vm_control_planes_count = length(local.vm_control_planes)
+  
+  # Filter control planes without mac_address specified and create a mapping from original index to new index
+  vm_control_planes_need_mac = [
+    for idx, cp in local.vm_control_planes : {
+      idx = idx
+      cp = cp
+    } if cp.mac_address == null || cp.mac_address == ""
+  ]
+  
+  # Create a mapping from original VM index to MAC address resource index
+  vm_mac_index_map = { for i, vm in local.vm_control_planes_need_mac : vm.idx => i }
 }
 
 # see https://registry.terraform.io/providers/ivoronin/macaddress/latest/docs/resources/macaddress
 resource "macaddress" "talos-control-plane" {
-  # see https://developer.hashicorp.com/terraform/language/meta-arguments/count
-  count = local.vm_control_planes_count
+  # Only create mac addresses for VMs that don't have one specified
+  count = length(local.vm_control_planes_need_mac)
 }
 
 # see https://registry.terraform.io/providers/bpg/proxmox/0.62.0/docs/resources/virtual_environment_vm
@@ -80,13 +91,15 @@ resource "proxmox_virtual_environment_vm" "create_talos_control_plane_vms" {
     enabled     = true
     model       = "virtio"
     bridge      = each.value.network_bridge
-    mac_address = each.value.mac_address != null ? each.value.mac_address : macaddress.talos-control-plane[each.key].address
+    mac_address = each.value.mac_address != null && each.value.mac_address != "" ? each.value.mac_address : macaddress.talos-control-plane[lookup(local.vm_mac_index_map, each.key, 0)].address
     firewall    = false
   }
 
   operating_system {
     type = "l26" # Linux kernel type
   }
+
+  boot_order  = ["virtio0", "ide3"]
 
   disk {
     interface    = "virtio0"

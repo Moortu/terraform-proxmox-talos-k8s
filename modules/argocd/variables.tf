@@ -43,29 +43,13 @@ variable "git_url" {
   default     = ""
 }
 
-variable "cilium_enabled" {
-  description = "Whether to configure Cilium through ArgoCD"
-  type        = bool
-  default     = true
-}
-
-variable "managed_by_talos" {
-  description = "Whether Cilium is currently managed by Talos inline manifests. If true, ArgoCD's Cilium application will be suspended."
-  type        = bool
-  default     = true
-}
-
-variable "cilium_version" {
-  description = "Version of Cilium to deploy through ArgoCD"
+variable "git_path" {
+  description = "Path within the Git repository for configuration"
   type        = string
-  default     = "1.15.6"
+  default     = "clusters/default"
 }
 
-variable "cilium_values" {
-  description = "Values for Cilium Helm chart"
-  type        = any
-  default     = {}
-}
+# Cilium-related variables have been removed
 
 variable "argocd_version" {
   description = "Version of Argo CD to deploy"

@@ -28,6 +28,18 @@ variable "talos_network_dhcp" {
   default     = true
 }
 
+variable "talos_network_ip_prefix_override" {
+  description = "Override the network prefix derived from CIDR (e.g., use 8 for a /8 subnet mask while keeping IPs in the original CIDR range)"
+  type        = number
+  default     = null
+}
+
+variable "talos_name_servers" {
+  description = "List of DNS nameservers to use for the Talos nodes"
+  type        = list(string)
+  default     = ["8.8.8.8", "1.1.1.1"]
+}
+
 
 variable "use_kube_proxy" {
   type    = bool

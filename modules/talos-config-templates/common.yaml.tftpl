@@ -2,6 +2,7 @@ version: v1alpha1
 # https://www.talos.dev/v1.8/kubernetes-guides/network/deploying-cilium/
 cluster:
   network:
+    dnsDomain: ${talos_k8s_cluster_domain}
     cni:
       name: none # Disables CNI installation.
   proxy:
@@ -47,7 +48,9 @@ machine:
 
   network:
     nameservers:
-      - ${network_gateway}
+%{ for server in name_servers ~}
+      - ${server}
+%{ endfor ~}
 
   files:
     - path: /var/cri/conf.d/metrics.toml
@@ -61,28 +64,3 @@ machine:
       enabled: true
       port: 7445
 
-
-
-# cluster:
-#   network:
-#     cni:
-#       name: none # Disables CNI installation.
-#   proxy:
-#     disabled: true # Disables kube-proxy installation (use Cilium’s kubeproxyreplacement instead for service mesh)
-#   apiServer: # All of these arguments are set to allow access to API via public IP, can remove for a locally accessed cluster, as you’ll only have the internal IP
-#     certSANs: <Public IP>
-#     extraArgs:
-#       bind-address: 0.0.0.0
-
-# machine:
-#   kubelet:
-#     nodeIP: #These only need to be set to restrict kubelet to listen on private IPs, can get rid of this section for locally accessed cluster
-#       validSubnets: 10.0.0.0/24
-#     extraArgs:
-#       pod-max-pids: "1024" # Set for CIS L2 compliance (security)
-#       cloud-provider: "external" # Set to allow for external cloud provider, this can be skipped for local cluster with alternate means of provisioning storage and loadbalancer
-
-# Second round of patches is applied to each, if needed to create a patch for each machine:
-# machine:
-#   network:
-#     hostname: "node-hostname"

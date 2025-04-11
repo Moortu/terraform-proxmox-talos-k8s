@@ -78,8 +78,3 @@ variable "talos_machine_configuration_workers" {
 variable "talos_machine_secrets" {
   type = any
 }
-
-variable "cilium_manifests" {
-  description = "The generated Cilium manifests"
-  type        = string
-}

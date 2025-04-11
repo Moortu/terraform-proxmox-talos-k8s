@@ -1,92 +1,42 @@
-variable "kubernetes_config_path" {
-  description = "Path to the kubeconfig file"
+variable "git_token" {
+  description = "Git token"
+  sensitive   = true
   type        = string
   default     = ""
 }
 
-variable "git_provider" {
-  description = "Git provider type: 'github', 'gitlab', or 'gitea'"
+variable "git_org_or_username" {
+  description = "Git organization"
   type        = string
-  default     = "github"
-  
-  validation {
-    condition     = contains(["github", "gitlab", "gitea"], var.git_provider)
-    error_message = "git_provider must be one of: 'github', 'gitlab', or 'gitea'"
-  }
-}
-
-variable "git_token" {
-  description = "Git provider personal access token"
-  type        = string
-  sensitive   = true
-}
-
-variable "git_owner" {
-  description = "Git repository owner/username"
-  type        = string
+  default     = ""
 }
 
 variable "git_repository" {
-  description = "Git repository name"
-  type        = string
-}
-
-variable "git_branch" {
-  description = "Git branch to use"
-  type        = string
-  default     = "main"
-}
-
-variable "git_path" {
-  description = "Path within the Git repository"
-  type        = string
-  default     = "clusters/kalimdor"
-}
-
-variable "git_url" {
-  description = "Custom Git URL for Gitea or self-hosted GitLab (ignored for GitHub)"
+  description = "Git repository"
   type        = string
   default     = ""
 }
 
-variable "cilium_enabled" {
-  description = "Whether to configure Cilium through FluxCD"
-  type        = bool
-  default     = true
-}
-
-variable "managed_by_talos" {
-  description = "Whether Cilium is currently managed by Talos inline manifests. If true, FluxCD's Cilium resources will be suspended."
-  type        = bool
-  default     = true
-}
-
-variable "cilium_version" {
-  description = "Version of Cilium to deploy through FluxCD"
+variable "git_username" {
+  description = "Git username"
   type        = string
-  default     = "1.15.6"
+  default     = ""
 }
 
-variable "cilium_values" {
-  description = "Values for Cilium Helm chart"
-  type        = any
-  default     = {}
-}
-
-variable "flux_version" {
-  description = "Version of Flux to deploy"
+variable "fluxcd_cluster_path" {
+  description = "Path to the cluster directory in the Git repository"
   type        = string
-  default     = "2.2.3"
+  default     = "clusters/my-cluster"
 }
 
-variable "flux_namespace" {
-  description = "Namespace for Flux installation"
+variable "git_base_url" {
+  description = "Base URL for the Git provider"
   type        = string
-  default     = "flux-system"
+  default     = "https://github.com"
 }
 
-variable "wait_for_resources" {
-  description = "Whether to wait for resources to be ready"
-  type        = bool
-  default     = true
+variable "talos_k8s_cluster_domain" {
+  description = "Cluster domain"
+  type        = string
+  default     = ""
 }

@@ -2,11 +2,22 @@ variable "talos_version" {
     # https://github.com/siderolabs/talos/releases
     description = "Talos version to use"
     type        = string
-    default     = "1.9.5"
+    default     = "1.9.2"
     
     validation {
       condition     = can(regex("^\\d+\\.\\d+\\.\\d+$", var.talos_version))
       error_message = "The talos_version must be a valid semantic version (e.g., 1.9.5)."
+    }
+}
+
+variable "talos_architecture" {
+    description = "CPU architecture for Talos image (amd64 or arm64)"
+    type        = string
+    default     = "amd64"
+    
+    validation {
+      condition     = contains(["amd64", "arm64"], var.talos_architecture)
+      error_message = "The talos_architecture must be either 'amd64' or 'arm64'."
     }
 }
 

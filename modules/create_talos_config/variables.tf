@@ -34,6 +34,12 @@ variable "talos_network_gateway" {
   default     = "10.0.0.1"
 }
 
+variable "talos_name_servers" {
+  description = "List of DNS nameservers to use for the Talos nodes"
+  type        = list(string)
+  default     = ["8.8.8.8", "1.1.1.1"]
+}
+
 variable "k8s_version" {
     # https://www.talos.dev/v1.7/introduction/support-matrix/
     description = "Kubernetes version to use"

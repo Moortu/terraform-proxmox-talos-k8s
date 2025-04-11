@@ -26,10 +26,5 @@ machine:
         aliases:
           - ${cluster_domain}
 
-cluster:
-  allowSchedulingOnMasters: ${!taints_enabled}
-  inlineManifests:
-    - name: cilium
-      contents: |
-        ${indent(8, inline_manifests)}
+
     

@@ -15,3 +15,15 @@ variable "k8s_version" {
   type        = string
   default     = "1.31.0"
 }
+
+variable "k8s_service_host" {
+  description = "The Kubernetes service host"
+  type        = string
+  default     = "kubernetes.default.svc"
+}
+
+variable "k8s_service_port" {
+  description = "The Kubernetes service port"
+  type        = number
+  default     = 443
+}

@@ -1,6 +1,6 @@
 output "cilium_manifests" {
   description = "The generated Cilium manifests"
-  value       = data.helm_template.cilium.manifest
+  value       = "${data.helm_template.cilium.manifest}"
 }
 
 output "talos_patch" {

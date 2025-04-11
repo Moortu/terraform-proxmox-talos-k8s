@@ -32,7 +32,7 @@ variable "talos_version" {
     # https://github.com/siderolabs/talos/releases
     description = "Talos version to use"
     type        = string
-    default     = "1.8.0"
+    default     = "1.9.2"
 }
 
 variable "talos_iso_image_location" {

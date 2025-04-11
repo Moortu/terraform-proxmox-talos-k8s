@@ -1,28 +1,4 @@
 locals {
-  # Default common Cilium values based on the existing setup
-  default_cilium_values = {
-    ipam = {
-      mode = "kubernetes"
-    }
-    kubeProxyReplacement = "true"
-    securityContext = {
-      capabilities = {
-        ciliumAgent      = ["CHOWN", "KILL", "NET_ADMIN", "NET_RAW", "IPC_LOCK", "SYS_ADMIN", "SYS_RESOURCE", "DAC_OVERRIDE", "FOWNER", "SETGID", "SETUID"]
-        cleanCiliumState = ["NET_ADMIN", "SYS_ADMIN", "SYS_RESOURCE"]
-      }
-    }
-    cgroup = {
-      autoMount = {
-        enabled = false
-      }
-      hostRoot = "/sys/fs/cgroup"
-    }
-    k8sServiceHost = "localhost"
-    k8sServicePort = "7445"
-  }
-
-  # Merge default values with any provided values
-  cilium_values = merge(local.default_cilium_values, var.cilium_values)
   
   # Determine if we need to generate a random password
   need_random_password = var.argocd_admin_password == ""
@@ -119,45 +95,7 @@ resource "helm_release" "argocd" {
   wait = var.wait_for_resources
 }
 
-# Set up Cilium as an ArgoCD Application if enabled
-resource "local_file" "argocd_cilium_application" {
-  count = var.cilium_enabled ? 1 : 0
-
-  depends_on = [helm_release.argocd]
-
-  filename = "${path.root}/argocd/cilium-application.yaml"
-  content  = <<-EOT
-apiVersion: argoproj.io/v1alpha1
-kind: Application
-metadata:
-  name: cilium
-  namespace: ${var.argocd_namespace}
-spec:
-  project: default
-  source:
-    repoURL: https://helm.cilium.io
-    targetRevision: ${var.cilium_version}
-    chart: cilium
-    helm:
-      values: |
-        ${indent(8, yamlencode(local.cilium_values))}
-  destination:
-    server: https://kubernetes.default.svc
-    namespace: kube-system
-  syncPolicy:
-    # Initially disabled to avoid conflicts with Talos inline manifests
-    automated: null
-  # Only suspend if Cilium is still managed by Talos inline manifests
-  suspended: ${var.managed_by_talos}
-EOT
-
-  provisioner "local-exec" {
-    command = <<-EOT
-      export KUBECONFIG="${var.kubernetes_config_path}"
-      kubectl apply -f "${path.root}/argocd/cilium-application.yaml"
-    EOT
-  }
-}
+# Cilium application configuration has been removed
 
 # Display the ArgoCD admin password if we generated it
 resource "null_resource" "display_argocd_password" {

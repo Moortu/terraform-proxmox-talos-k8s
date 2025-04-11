@@ -133,13 +133,18 @@ cilium_management = "inline"
 # - both: Deploy both FluxCD and ArgoCD
 deploy_gitops = "none"  # Set to 'flux', 'argo', or 'both' to enable GitOps tools
 
+# Variables below are only needed when deploy_gitops is not 'none'
+
 #######################################################################
-# COMMON GIT PROVIDER CONFIGURATION
+# GITOPS CONFIGURATION
 #######################################################################
-# Common Git Provider Settings (used by both FluxCD and ArgoCD)
+
+#######################################################################
+# COMMON GIT PROVIDER CONFIGURATION (Legacy variables - kept for backward compatibility)
+#######################################################################
 gitops_git_provider = "github"  # Options: "github", "gitlab", "gitea"
-gitops_git_token    = ""       # [REQUIRED IF GITOPS ENABLED] Personal access token
-gitops_git_owner    = "username" # [REQUIRED IF GITOPS ENABLED] Git username or organization
+gitops_git_token    = ""       # Personal access token
+gitops_git_owner    = "username" # Git username or organization
 gitops_git_url      = ""       # e.g., "https://git.example.com" (leave empty for github.com)
 
 # Common wait for resources setting
@@ -148,6 +153,15 @@ gitops_wait_for_resources = true
 #######################################################################
 # FLUXCD REPOSITORY CONFIGURATION (Optional, only if deploy_gitops = 'flux' or 'both')
 #######################################################################
+# New variable structure for FluxCD
+git_base_url        = ""        # Base URL (leave empty for github.com)
+git_token           = ""        # [REQUIRED] Personal access token
+git_org_or_username = "username" # [REQUIRED] Git username or organization
+git_repository      = "fluxcd_repo"  # [REQUIRED] Git repository name for FluxCD
+git_username        = "username"     # [REQUIRED] Git username for auth
+fluxcd_cluster_path = "clusters/talos-cluster"  # Path within the Git repository
+
+# Legacy variables - kept for backward compatibility
 fluxcd_repository_name = "fluxcd_repo"  # Git repository name for FluxCD
 fluxcd_branch = "main"                  # Git branch for FluxCD
 fluxcd_path = "clusters/talos-cluster"  # Path within the Git repository for FluxCD
@@ -162,6 +176,15 @@ fluxcd_cilium_enabled = true  # Whether FluxCD should manage Cilium
 #######################################################################
 # ARGOCD REPOSITORY CONFIGURATION (Optional, only if deploy_gitops = 'argo' or 'both')
 #######################################################################
+# New variable structure for ArgoCD
+argocd_base_url        = ""        # Base URL (leave empty for github.com)
+argocd_token           = ""        # [REQUIRED] Personal access token
+argocd_org_or_username = "username" # [REQUIRED] Git username or organization
+argocd_repository      = "argocd_repo"  # [REQUIRED] Git repository name for ArgoCD
+argocd_username        = "username"     # [REQUIRED] Git username for auth
+argocd_cluster_path    = "clusters/talos-cluster"  # Path within the Git repository
+
+# Legacy variables - kept for backward compatibility
 argocd_repository_name = "argocd_repo"  # Git repository name for ArgoCD
 argocd_branch = "main"                 # Git branch for ArgoCD
 

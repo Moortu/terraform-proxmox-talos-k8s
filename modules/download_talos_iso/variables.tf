@@ -30,6 +30,12 @@ variable "talos_version" {
     default     = "1.8.0"
 }
 
+variable "talos_architecture" {
+    description = "CPU architecture for Talos image (amd64 or arm64)"
+    type        = string
+    default     = "amd64"
+}
+
 
 
 variable "proxmox_nodes" {

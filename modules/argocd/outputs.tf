@@ -24,7 +24,4 @@ output "argocd_version" {
   value       = var.argocd_version
 }
 
-output "cilium_application_file" {
-  description = "Path to the generated Cilium application file"
-  value       = var.cilium_enabled ? local_file.argocd_cilium_application[0].filename : null
-}
+# Cilium output has been removed

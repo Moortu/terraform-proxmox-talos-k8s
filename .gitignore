@@ -6,5 +6,4 @@
 *.tfplan
 *.tmp
 kubeconfig.y*
-generated/kubeconfig
-generated/talosconfig
+generated/*

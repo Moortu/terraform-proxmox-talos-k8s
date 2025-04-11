@@ -8,16 +8,19 @@ locals {
   talos_mc_defaults = {
     topology_region     = var.talos_k8s_cluster_name,
     talos_version       = var.talos_version,
+    talos_k8s_cluster_domain = var.talos_k8s_cluster_domain,
     network_gateway     = var.talos_network_gateway,
     install_disk_device = var.talos_install_disk_device,
-    install_image_url   = var.talos_install_image_url
+    install_image_url   = var.talos_install_image_url,
+    name_servers        = var.talos_name_servers
   }
-  # Create a YAML patch for the CNI and kube-proxy settings
-  # This will be merged with the Cilium patch from the generate_cilium_manifest module
-  cilium_cni_patch = yamlencode(var.cilium_patch)
+  # Create a YAML patch for the CNI and kube-proxy settings from the provided cilium_patch
+  # Only create this patch if we have actual content
+  cilium_cni_patch = length(var.cilium_patch) > 0 ? yamlencode(var.cilium_patch) : ""
   
   # Create the inline manifest configuration for Cilium
-  cilium_inline_manifest = var.include_cilium_inline_manifests ? {
+  # Only create this if we have actual manifests to include
+  cilium_inline_manifest = var.include_cilium_inline_manifests && var.cilium_manifests != "" ? {
     cluster = {
       inlineManifests = [
         {
@@ -28,8 +31,8 @@ locals {
     }
   } : {}
   
-  # Convert to YAML for the patch, only if we're including the manifests
-  cilium_inline_manifest_patch = var.include_cilium_inline_manifests ? yamlencode(local.cilium_inline_manifest) : ""
+  # Convert to YAML for the patch, only if we have valid inline manifests
+  cilium_inline_manifest_patch = var.include_cilium_inline_manifests && var.cilium_manifests != "" ? yamlencode(local.cilium_inline_manifest) : ""
 }
 # see https://registry.terraform.io/providers/siderolabs/talos/0.6.0/docs/resources/machine_secrets
 resource "talos_machine_secrets" "talos" {
@@ -55,13 +58,12 @@ data "talos_machine_configuration" "cp" {
   docs               = false
   examples           = false
 
-  config_patches = var.include_cilium_inline_manifests ? [
+  config_patches = [
     templatefile("${path.root}/modules/talos-config-templates/common.yaml.tftpl", local.talos_mc_defaults),
-    local.cilium_cni_patch,
-    local.cilium_inline_manifest_patch,
-  ] : [
-    templatefile("${path.root}/modules/talos-config-templates/common.yaml.tftpl", local.talos_mc_defaults),
-    local.cilium_cni_patch,
+    # Only include the cilium_cni_patch if it's not empty
+    length(local.cilium_cni_patch) > 0 ? local.cilium_cni_patch : "",
+    # Only include the cilium_inline_manifest_patch if inline manifests are enabled and it's not empty
+    var.include_cilium_inline_manifests && length(local.cilium_inline_manifest_patch) > 0 ? local.cilium_inline_manifest_patch : "",
   ]
 }
 
@@ -78,6 +80,9 @@ data "talos_machine_configuration" "wn" {
 
   config_patches = [
     templatefile("${path.root}/modules/talos-config-templates/common.yaml.tftpl", local.talos_mc_defaults),
-    local.cilium_cni_patch,
+    # Only include the cilium_cni_patch if it's not empty
+    length(local.cilium_cni_patch) > 0 ? local.cilium_cni_patch : "",
+    # Only include the cilium_inline_manifest_patch if inline manifests are enabled and it's not empty
+    var.include_cilium_inline_manifests && length(local.cilium_inline_manifest_patch) > 0 ? local.cilium_inline_manifest_patch : "",
   ]
 }

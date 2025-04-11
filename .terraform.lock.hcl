@@ -2,31 +2,31 @@
 # Manual edits may be lost in future updates.
 
 provider "registry.opentofu.org/bpg/proxmox" {
-  version     = "0.74.0"
-  constraints = ">= 0.74.0"
+  version     = "0.75.0"
+  constraints = ">= 0.74.0, >= 0.75.0"
   hashes = [
-    "h1:4S5j/cn2vn9/8iigUiWOxDwhz2mKXnihs6x3W+LocTg=",
-    "zh:2bab64cc0fa21947367d10e50583840693afd1d32359bb574a45d0db5fb25db7",
-    "zh:37d95e128667d6dafcbd53d667cecae5f758f2a08f96f28de10e644dd66d8387",
-    "zh:6c1494fd586c9038bc36195c5c66e2cc029dbca43a24bc13a46197f70e309c20",
-    "zh:6f37c963ff3206b1f8861e3884dca7014769125cd3c7f962cd8656415f8ef2f2",
-    "zh:73e6b1e0f0a6a64913afb1ce27a26e7fee69d19b2d43a9d0aa5111c077082fda",
-    "zh:93e50c7fdf723c034cfa1ac915eb157e8d64a8b91df5f7d7a5ab3f0b3faafa8a",
-    "zh:93e539f35669f132357e3c7798ea5f829945dd4e0b416875f0e19d34fdfc46d0",
-    "zh:b09c655e39df59f280811a1a05ab1d007e435887a58dd0f0333f7bd728a1d22d",
-    "zh:b0ad6daf34b6e1475ce6e1c9439af64d632897a46c21895e0a73b8329321d687",
-    "zh:b1438f112d91a6128ebc9c968fd56753809a60bce3b7d8effe3f0c49826b1308",
-    "zh:b215dd5e9f0c7778993b76aae44f98d07a6f87cf0c54f95f3c8b117cad7668e0",
-    "zh:d960acd736637736d06433cc30f0f0e65024bbaaadaa04b86d7a3eca3fe49851",
+    "h1:l90rZgZXSuH9EQMx9qrIBOdqXP9qL3Yz0Iq6f9C3gss=",
+    "zh:06905849a79ec9141e86e94d4830a5f54d5b53caa7cc0a40883c17ca4581ff59",
+    "zh:1eb17bee81d6b23660334203b55dfa5ca9e84eeded54bb6821ad4c2a6a226aa2",
+    "zh:48621a2baa3ef1b1c6d3c676ab105842b5718d60e3e72cfcf5d7fe575d78ae7f",
+    "zh:4d4fbb1f1409a00f1db1ffd441c8c8b15444a694d641c9cc658bad29e4ac05d6",
+    "zh:4ea051d519167f3fe490265242a663658dd8e447472cc0c6c3e4f019e781ffa4",
+    "zh:6608489278ec99bd23eb09f3dc6575b95a85045d37858cbccfc8d9eaf2ca6110",
+    "zh:6cf7d9b8749386ab4c504c135089004e21eee7e8da354255993eaf07d75671e9",
+    "zh:722f42b424be663236ca3aaf4ba5b67d21c7c567a89cb3e3606083f0f744a23b",
+    "zh:82dba722a221b6ed85e3c29d9f433ecc9761b72667a498ad3e9e171dbe5f5a61",
+    "zh:86782c28d296bd393892813ceb8798bf9cd0a1b030654b571db0c20fc7a5c98e",
+    "zh:9d6a66dfd989fc2e30e79e6beed82c7355fa5f41531b38ca4be9c412614380ff",
+    "zh:a921969e81522ff9b90cf3fc8bb9fa717abf588fa6f0496ef832ec6418ec9bb9",
+    "zh:d84245844bd70c8d45344e8279b583389af50c6634c440d511b0a97e4cd84e07",
+    "zh:e1b5a3ecaa93b815b085918ced154c6b540b12dcb427fd37ea178129a046dfa0",
     "zh:f26e0763dbe6a6b2195c94b44696f2110f7f55433dc142839be16b9697fa5597",
-    "zh:fe8d3fd41a662cafc0b2484f567447a5a78543f1d93bca11b9bff1e5b376ab80",
-    "zh:ff9dbb8cd84f2ac6282f00e159db44c79551afba07dfb5d54a83d9a0458299fe",
   ]
 }
 
 provider "registry.opentofu.org/fluxcd/flux" {
   version     = "1.5.1"
-  constraints = ">= 1.5.1"
+  constraints = "1.5.1"
   hashes = [
     "h1:DXmsl74JLG7TvGMjsHgCOAycmOgfL0UvyR/DtWOs2+4=",
     "zh:0e123771d8d7ad8ffb67936ddb7e75bcca1014fb074256cf2134fec2e61b570b",

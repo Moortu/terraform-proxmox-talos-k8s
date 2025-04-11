@@ -21,8 +21,7 @@ resource "talos_machine_configuration_apply" "control_planes" {
       hostname          = each.value.vm_name,
       ipv4_local        = each.value.ip,
       ipv4_vip          = var.talos_k8s_cluster_vip,
-      taints_enabled    = lookup(each.value, "taints_enabled", true),
-      inline_manifests  = var.cilium_manifests
+      taints_enabled    = lookup(each.value, "taints_enabled", true)
     })
   ]
 }
@@ -74,29 +73,20 @@ resource "talos_machine_bootstrap" "this" {
   node                 = var.control_planes_network[0].ip
 }
 
-# see https://registry.terraform.io/providers/siderolabs/talos/0.6.0/docs/data-sources/cluster_health
-data "talos_cluster_health" "ready" {
+# Add a timeout to allow cluster initialization
+resource "time_sleep" "wait_for_bootstrap" {
   depends_on = [talos_machine_bootstrap.this]
-
-  client_configuration = var.talos_machine_secrets.client_configuration
-  endpoints            = [var.talos_k8s_cluster_vip]
-  control_plane_nodes  = [for i in var.control_planes_network : i.ip]
-  worker_nodes         = [for i in var.workers_network :i.ip]
-
-  timeouts = {
-    read = "10s"
-  }
+  create_duration = "120s"
 }
 
-
 resource "talos_cluster_kubeconfig" "kubeconfig" {
-  depends_on = [data.talos_cluster_health.ready]
+  depends_on = [time_sleep.wait_for_bootstrap]
   client_configuration = var.talos_machine_secrets.client_configuration
   node                 = var.control_planes_network[0].ip
 }
 
 data "talos_client_configuration" "talosconfig" {
-  depends_on = [data.talos_cluster_health.ready]
+  depends_on = [time_sleep.wait_for_bootstrap]
   cluster_name         = var.talos_k8s_cluster_name
   client_configuration = var.talos_machine_secrets.client_configuration
   nodes                = [ for node in var.control_planes_network: node.ip ]

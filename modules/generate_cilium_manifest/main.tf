@@ -5,7 +5,7 @@ locals {
     ipam = {
       mode = "kubernetes"
     }
-    kubeProxyReplacement = var.use_kube_proxy ? "false" : "true"
+    kubeProxyReplacement = "false"  # Always set to false as requested
     securityContext = {
       capabilities = {
         ciliumAgent = ["CHOWN", "KILL", "NET_ADMIN", "NET_RAW", "IPC_LOCK", "SYS_ADMIN", "SYS_RESOURCE", "DAC_OVERRIDE", "FOWNER", "SETGID", "SETUID"]
@@ -17,6 +17,20 @@ locals {
         enabled = false
       }
       hostRoot = "/sys/fs/cgroup"
+    }
+   
+    # Envoy proxy settings
+    envoy = {
+      enabled = true
+    }
+    # Hubble monitoring settings
+    hubble = {
+      relay = {
+        enabled = true
+      }
+      ui = {
+        enabled = true
+      }
     }
   }
   
@@ -44,12 +58,14 @@ locals {
   }
 }
 
+
 # Template the helm chart locally
 data "helm_template" "cilium" {
   name       = "cilium"
   repository = "https://helm.cilium.io"
   chart      = "cilium"
   version    = var.cilium_version
+  namespace = "kube-system"
   
   # Use values directly instead of dynamic sets
   values = [
@@ -58,4 +74,16 @@ data "helm_template" "cilium" {
   
   # Specify appropriate Kubernetes version - needs to be >=1.21.0
   kube_version = var.k8s_version
+}
+
+# Output the Cilium manifest to a file
+resource "local_file" "cilium_manifest" {
+  filename = "${path.root}/generated/cilium-manifest.yaml"
+  content  = "${data.helm_template.cilium.manifest}"
+
+  # Create the generated directory if it doesn't exist
+  provisioner "local-exec" {
+    command = "New-Item -Path '${dirname(self.filename)}' -ItemType Directory -Force"
+    interpreter = ["PowerShell", "-Command"]
+  }
 }

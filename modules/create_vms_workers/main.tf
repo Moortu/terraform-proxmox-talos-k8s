@@ -88,6 +88,8 @@ resource "proxmox_virtual_environment_vm" "talos_worker_vms" {
     type = "l26" # Linux kernel type
   }
 
+  boot_order  = ["virtio0", "ide3"]
+
   disk {
     interface    = "virtio0"
     size         = each.value.boot_disk_size
