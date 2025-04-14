@@ -15,5 +15,5 @@ output "cilium_version" {
 
 output "cilium_values" {
   description = "The Cilium values used for configuration"
-  value       = local.all_values
+  value       = local.cilium_values
 }

@@ -5,7 +5,7 @@ locals {
     ipam = {
       mode = "kubernetes"
     }
-    kubeProxyReplacement = "false"  # Always set to false as requested
+    kubeProxyReplacement = "true" 
     securityContext = {
       capabilities = {
         ciliumAgent = ["CHOWN", "KILL", "NET_ADMIN", "NET_RAW", "IPC_LOCK", "SYS_ADMIN", "SYS_RESOURCE", "DAC_OVERRIDE", "FOWNER", "SETGID", "SETUID"]
@@ -32,16 +32,9 @@ locals {
         enabled = true
       }
     }
-  }
-  
-  # Add these settings only when not using kube-proxy
-  kube_proxy_replacement_values = var.use_kube_proxy ? {} : {
     k8sServiceHost = "localhost"
     k8sServicePort = "7445"
   }
-  
-  # Merge all values
-  all_values = merge(local.cilium_values, local.kube_proxy_replacement_values)
   
   # This will be exported for use in the machine configuration patch
   talos_patch = {
@@ -52,7 +45,7 @@ locals {
         }
       }
       proxy = {
-        disabled = var.use_kube_proxy ? false : true
+        disabled = true
       }
     }
   }
@@ -69,7 +62,7 @@ data "helm_template" "cilium" {
   
   # Use values directly instead of dynamic sets
   values = [
-    yamlencode(local.all_values)
+    yamlencode(local.cilium_values)
   ]
   
   # Specify appropriate Kubernetes version - needs to be >=1.21.0
