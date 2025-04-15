@@ -3,6 +3,10 @@ version: v1alpha1
 cluster:
   network:
     dnsDomain: ${talos_k8s_cluster_domain}
+    podSubnets:
+      - 10.244.0.0/16
+    serviceSubnets:
+      - 10.96.0.0/12
     cni:
       name: none # Disables CNI installation.
   proxy:
@@ -63,4 +67,8 @@ machine:
     kubePrism:
       enabled: true
       port: 7445
+    # Configure hostDNS to control DNS resolution behavior
+    hostDNS:
+      enabled: true
+      forwardKubeDNSToHost: false
 

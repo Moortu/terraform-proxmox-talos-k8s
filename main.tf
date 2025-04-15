@@ -116,7 +116,7 @@ locals {
   using_inline_cilium = var.include_cilium_inline_manifests
   
   # Kubeconfig path for GitOps tools
-  kubeconfig_path = "${path.root}/generated/kubeconfig"
+  kubeconfig_path = "${path.root}/generated/kube/config"
 }
 
 module "talos_iso" {
@@ -244,7 +244,7 @@ resource "time_sleep" "wait_for_boot" {
 # Use the existing kubeconfig file
 provider "flux" {
   kubernetes = {
-    config_path = "${path.root}/generated/kubeconfig"
+    config_path = "${path.root}/generated/kube/config"
   }
   git = {
     url = "${var.git_base_url}/${var.git_org_or_username}/${var.git_repository}.git"

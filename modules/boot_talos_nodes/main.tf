@@ -95,11 +95,11 @@ data "talos_client_configuration" "talosconfig" {
 resource "local_sensitive_file" "export_talosconfig" {
   depends_on = [ data.talos_client_configuration.talosconfig ]
   content    = data.talos_client_configuration.talosconfig.talos_config
-  filename   = "${path.root}/generated/talosconfig" #rename to config, place in .talos
+  filename   = "${path.root}/generated/talos/config" #rename to config, place in .talos
 }
 
 resource "local_sensitive_file" "export_kubeconfig" {
   depends_on = [ talos_cluster_kubeconfig.kubeconfig ]
   content    = talos_cluster_kubeconfig.kubeconfig.kubeconfig_raw
-  filename   = "${path.root}/generated/kubeconfig" #rename to config place in .kube
+  filename   = "${path.root}/generated/kube/config" #rename to config place in .kube
 }
