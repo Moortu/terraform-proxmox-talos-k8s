@@ -1,13 +1,5 @@
 version: v1alpha1
 machine:
-  nodeLabels:
-    topology.kubernetes.io/zone: ${topology_zone}
-  certSANs:
-    - ${cluster_domain}
-    - ${ipv4_vip}
-    - ${hostname}
-    - ${ipv4_local}
-
   network:
     hostname: ${hostname}
     interfaces:
@@ -20,11 +12,3 @@ machine:
             gateway: ${network_gateway}
         vip:
           ip: ${ipv4_vip}
-
-    extraHostEntries:
-      - ip: 127.0.0.1
-        aliases:
-          - ${cluster_domain}
-
-
-    

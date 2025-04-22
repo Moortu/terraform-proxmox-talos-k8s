@@ -93,13 +93,13 @@ locals {
   }
   
   # Cluster endpoint and network configuration
-  talos_k8s_cluster_endpoint = "https://${var.talos_k8s_cluster_domain}:${var.talos_k8s_cluster_endpoint_port}"
+  talos_k8s_cluster_endpoint = "https://api.${var.talos_k8s_cluster_vip_domain}:${var.talos_k8s_cluster_endpoint_port}"
   talos_network_ip_prefix = var.talos_network_ip_prefix_override != null ? var.talos_network_ip_prefix_override : tonumber(split("/", var.talos_network_cidr)[1])
   talos_network_base_ip = split("/", var.talos_network_cidr)[0]
   
   # DNS records for the cluster
   cluster_dns_records = {
-    api = "api.${var.talos_k8s_cluster_domain}"
+    api = "api.${var.talos_k8s_cluster_vip_domain}"
     vip = var.talos_k8s_cluster_vip
   }
   
@@ -190,6 +190,7 @@ module "cilium" {
 # Local variables related to GitOps configuration are already defined at the top of the file
 
 module "create_talos_config" {
+  
   depends_on = [ module.control_plane_vms, module.workers_vms, module.talos_iso ]
   source = "./modules/create_talos_config"
 
@@ -198,6 +199,7 @@ module "create_talos_config" {
   }
 
   talos_k8s_cluster_domain        = var.talos_k8s_cluster_domain
+  talos_k8s_cluster_vip_domain = var.talos_k8s_cluster_vip_domain
   talos_k8s_cluster_endpoint_port = var.talos_k8s_cluster_endpoint_port
   talos_k8s_cluster_name          = var.talos_k8s_cluster_name
   talos_k8s_cluster_vip           = var.talos_k8s_cluster_vip
@@ -210,7 +212,6 @@ module "create_talos_config" {
   talos_install_image_url         = module.talos_iso.talos_installer_image_url
   # Only include Cilium if inline manifests are enabled and the cilium module exists
   cilium_manifests                = length(module.cilium) > 0 ? module.cilium[0].cilium_manifests : ""
-  cilium_patch                    = length(module.cilium) > 0 ? module.cilium[0].talos_patch : {}
   include_cilium_inline_manifests = length(module.cilium) > 0
 } 
 
@@ -271,36 +272,36 @@ module "fluxcd" {
   fluxcd_cluster_path = var.fluxcd_cluster_path
 }
 
-# ArgoCD deployment (optional)
-module "argocd" {
-  count      = local.deploy_argo ? 1 : 0
-  depends_on = [module.boot_talos_nodes]
-  source     = "./modules/argocd"
+# # ArgoCD deployment (optional)
+# module "argocd" {
+#   count      = local.deploy_argo ? 1 : 0
+#   depends_on = [module.boot_talos_nodes]
+#   source     = "./modules/argocd"
   
-  providers = {
-    kubernetes = kubernetes
-    helm       = helm
-  }
+#   providers = {
+#     kubernetes = kubernetes
+#     helm       = helm
+#   }
   
-  # Kubernetes configuration
-  kubernetes_config_path = local.kubeconfig_path
+#   # Kubernetes configuration
+#   kubernetes_config_path = local.kubeconfig_path
   
-  # Git configuration for ArgoCD using the new variables
-  git_provider   = "github" # Using GitHub as the provider
-  git_token      = var.argocd_token
-  git_owner      = var.argocd_org_or_username
-  git_repository = var.argocd_repository
-  git_branch     = "main" # Default branch
-  git_url        = var.argocd_base_url
-  # Note: Using this variable in the module's local_file resource:
-  # git_path is defined in the module but we're using argocd_cluster_path here
+#   # Git configuration for ArgoCD using the new variables
+#   git_provider   = "github" # Using GitHub as the provider
+#   git_token      = var.argocd_token
+#   git_owner      = var.argocd_org_or_username
+#   git_repository = var.argocd_repository
+#   git_branch     = "main" # Default branch
+#   git_url        = var.argocd_base_url
+#   # Note: Using this variable in the module's local_file resource:
+#   # git_path is defined in the module but we're using argocd_cluster_path here
   
-  # Cilium configuration has been removed
+#   # Cilium configuration has been removed
   
-  # ArgoCD-specific configurations
-  argocd_version   = var.argocd_version
-  argocd_namespace = var.argocd_namespace
-  argocd_admin_password = var.argocd_admin_password
+#   # ArgoCD-specific configurations
+#   argocd_version   = var.argocd_version
+#   argocd_namespace = var.argocd_namespace
+#   argocd_admin_password = var.argocd_admin_password
   
-  wait_for_resources = try(var.gitops_wait_for_resources, null) != null ? var.gitops_wait_for_resources : var.argocd_wait_for_resources
-}
+#   wait_for_resources = try(var.gitops_wait_for_resources, null) != null ? var.gitops_wait_for_resources : var.argocd_wait_for_resources
+# }

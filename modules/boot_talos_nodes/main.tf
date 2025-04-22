@@ -46,20 +46,7 @@ resource "talos_machine_configuration_apply" "worker_nodes" {
       hostname          = each.value.vm_name,
       ipv4_local        = each.value.ip,
       ipv4_vip          = var.talos_k8s_cluster_vip,
-    }),
-    templatefile("${path.root}/modules/talos-config-templates/node-labels.yaml.tftpl", {
-      node_labels = "worker",
-    })
-  ],
-    # [
-    #   for disk in each.value.data_disks : templatefile(
-    #   "${path.root}/modules/talos-config-templates/worker-node-disk.yaml.tftpl",
-    #   {
-    #     disk_device = "/dev/${disk.device_name}",
-    #     mount_point = disk.mount_point,
-    #   })
-    # ]
-  )
+    })])
 }
 
 # see https://registry.terraform.io/providers/siderolabs/talos/0.6.0/docs/resources/machine_bootstrap

@@ -91,18 +91,7 @@ ${local.dns_banner_line}
 
 # API/CONTROL PLANE VIP RECORDS
 
-  ${var.talos_k8s_cluster_domain}                IN    A    ${var.talos_k8s_cluster_vip}
   api.${var.talos_k8s_cluster_domain}            IN    A    ${var.talos_k8s_cluster_vip}
-
-# CONTROL PLANE NODE RECORDS${join("", [
-  for i, cp in local.all_control_planes : 
-    "\n  ${format("%-40s", "${cp.name}.${var.talos_k8s_cluster_domain}")}IN    A    ${var.talos_network_dhcp ? "DHCP (see VM console)" : cidrhost(var.talos_network_cidr, i + var.control_plane_first_ip)}"
-])}
-
-# WORKER NODE RECORDS${join("", [
-  for i, worker in local.all_workers : 
-    "\n  ${format("%-40s", "${worker.name}.${var.talos_k8s_cluster_domain}")}IN    A    ${var.talos_network_dhcp ? "DHCP (see VM console)" : cidrhost(var.talos_network_cidr, i + var.worker_node_first_ip)}"
-])}
 
 NOTE: Add these entries to your DNS server or /etc/hosts file as shown above.
       These addresses must be accessible from your machines that need to connect to the cluster.

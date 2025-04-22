@@ -14,10 +14,15 @@ variable "talos_k8s_cluster_vip" {
   }
 }
 
+variable "talos_k8s_cluster_vip_domain" {
+description = "Domain name of the Talos Kubernetes vip endpoint, if you don't have a domain name set, then it's the vip ip"
+  type        = string  
+}
+
 variable "talos_k8s_cluster_domain" {
-  description = "Domain name of the Talos Kubernetes cluster"
+  description = "Domain name of the Internal Talos Kubernetes cluster"
   type        = string
-  default     = "talos-cluster.local"
+  default     = "cluster.local"
   
   validation {
     condition     = can(regex("^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)*$", var.talos_k8s_cluster_domain))

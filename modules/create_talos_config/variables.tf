@@ -21,6 +21,11 @@ variable "talos_k8s_cluster_vip" {
   type        = string
 }
 
+variable "talos_k8s_cluster_vip_domain" {
+  description = "Domain name of the Talos Kubernetes vip endpoint, if you don't have a domain name set, then it's the vip ip"
+  type        = string
+}
+
 variable "talos_version" {
     # https://github.com/siderolabs/talos/releases
     description = "Talos version to use"
@@ -75,11 +80,6 @@ variable "talos_control_plane_vms_network" {
 variable "cilium_manifests" {
   description = "The generated Cilium manifests to include in the Talos configuration"
   type        = string
-}
-
-variable "cilium_patch" {
-  description = "The Talos configuration patch for Cilium CNI settings"
-  type        = map(any)
 }
 
 variable "include_cilium_inline_manifests" {

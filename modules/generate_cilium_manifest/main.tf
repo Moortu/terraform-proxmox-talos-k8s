@@ -2,62 +2,22 @@
 # This doesn't require a connection to the Kubernetes cluster
 locals {
   cilium_values = {
-    # 1. Core configuration for Talos with kube-proxy replacement
+    # Core configuration for Talos with kube-proxy replacement
     kubeProxyReplacement = "true"
     k8sServiceHost = "localhost"
     k8sServicePort = "7445"
     
-    
-    # 3. Network device configuration (auto-detection for maximum portability)
-    devices = ""
-    
-    # 4. Routing configuration (optimized for Talos)
-    routingMode = "native"
-    autoDirectNodeRoutes = true
-    ipv4NativeRoutingCIDR = "10.244.0.0/16"
-    
-    # 5. DNS configuration (essential for external connectivity)
-    dns = {
-      enabled = true
-      enableNodePort = true
-    }
-    
-    # 6. Network masquerading and routing configuration
-    bpf = {
-      masquerade = true
-    }
-    
-    # 7. External connectivity settings (optimized for kube-proxy replacement)
-    externalIPs = {
-      enabled = true
-    }
-    
-    # 8. Gateway API support with enhanced protocol capabilities
-    gatewayAPI = {
-      enabled = true
-      enableAlpn = true
-      enableAppProtocol = true
-    }
-    
-    # 9. Cgroup and BPF filesystem mounts (required for Talos)
-    cgroup = {
-      hostRoot = "/sys/fs/cgroup"
-      autoMount = {
-        enabled = false
-      }
-    }
-    
-    # 10. Critical connectivity settings for Talos
-    ipv4 = {
-      enabled = true
-    }
-    
-    # 11. IPAM configuration (required for proper IP address management)
+    # IPAM configuration
     ipam = {
       mode = "kubernetes"
     }
     
-    # 12. Required security context capabilities for Talos
+    # Network masquerading configuration
+    bpf = {
+      masquerade = true
+    }
+    
+    # Required security context capabilities for Talos
     securityContext = {
       capabilities = {
         ciliumAgent = ["CHOWN", "KILL", "NET_ADMIN", "NET_RAW", "IPC_LOCK", "SYS_ADMIN", "SYS_RESOURCE", "DAC_OVERRIDE", "FOWNER", "SETGID", "SETUID"]
@@ -65,37 +25,22 @@ locals {
       }
     }
     
-    # 13. Envoy proxy configuration
-    envoy = {
-      enabled = true
+    # Cgroup configuration for Talos
+    cgroup = {
+      autoMount = {
+        enabled = false
+      }
+      hostRoot = "/sys/fs/cgroup"
     }
-      
-    # 14. Hubble configuration with correct cluster domain name
-    hubble = {
-      relay = {
-        enabled = true
-        # Use correct domain for your cluster
-        peerTarget = "hubble-peer.kube-system.svc.k8s.kalimdor.lan:443"
-      }
-      ui = {
-        enabled = true
-      }
+    
+    # Gateway API configuration
+    gatewayAPI = {
+      enabled = true
+      enableAlpn = true
+      enableAppProtocol = true
     }
   }
   
-  # This will be exported for use in the machine configuration patch
-  talos_patch = {
-    cluster = {
-      network = {
-        cni = {
-          name = "none"
-        }
-      }
-      proxy = {
-        disabled = true
-      }
-    }
-  }
 }
 
 

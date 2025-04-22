@@ -1,5 +1,5 @@
 locals {
-  talos_k8s_cluster_endpoint = "https://${var.talos_k8s_cluster_domain}:${var.talos_k8s_cluster_endpoint_port}"
+  talos_k8s_cluster_endpoint = "https://api.${var.talos_k8s_cluster_vip_domain}:${var.talos_k8s_cluster_endpoint_port}"
   storage_mnt      = "/var/mnt/storage"
 
   control_plane_ip-addresses = [for cp in var.talos_control_plane_vms_network : cp.ip]
@@ -13,10 +13,9 @@ locals {
     install_disk_device = var.talos_install_disk_device,
     install_image_url   = var.talos_install_image_url,
     name_servers        = var.talos_name_servers
+    talos_k8s_cluster_endpoint = local.talos_k8s_cluster_endpoint
   }
-  # Create a YAML patch for the CNI and kube-proxy settings from the provided cilium_patch
-  # Only create this patch if we have actual content
-  cilium_cni_patch = length(var.cilium_patch) > 0 ? yamlencode(var.cilium_patch) : ""
+
   
   # Create the inline manifest configuration for Cilium
   # Only create this if we have actual manifests to include
@@ -60,8 +59,6 @@ data "talos_machine_configuration" "cp" {
 
   config_patches = [
     templatefile("${path.root}/modules/talos-config-templates/common.yaml.tftpl", local.talos_mc_defaults),
-    # Only include the cilium_cni_patch if it's not empty
-    length(local.cilium_cni_patch) > 0 ? local.cilium_cni_patch : "",
     # Only include the cilium_inline_manifest_patch if inline manifests are enabled and it's not empty
     var.include_cilium_inline_manifests && length(local.cilium_inline_manifest_patch) > 0 ? local.cilium_inline_manifest_patch : "",
   ]
@@ -79,10 +76,6 @@ data "talos_machine_configuration" "wn" {
   examples           = false
 
   config_patches = [
-    templatefile("${path.root}/modules/talos-config-templates/common.yaml.tftpl", local.talos_mc_defaults),
-    # Only include the cilium_cni_patch if it's not empty
-    length(local.cilium_cni_patch) > 0 ? local.cilium_cni_patch : "",
-    # Only include the cilium_inline_manifest_patch if inline manifests are enabled and it's not empty
-    var.include_cilium_inline_manifests && length(local.cilium_inline_manifest_patch) > 0 ? local.cilium_inline_manifest_patch : "",
+    templatefile("${path.root}/modules/talos-config-templates/common.yaml.tftpl", local.talos_mc_defaults)
   ]
 }

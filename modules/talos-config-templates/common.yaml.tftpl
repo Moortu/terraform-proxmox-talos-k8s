@@ -1,54 +1,19 @@
 version: v1alpha1
-# https://www.talos.dev/v1.8/kubernetes-guides/network/deploying-cilium/
 cluster:
   network:
-    dnsDomain: ${talos_k8s_cluster_domain}
-    podSubnets:
-      - 10.244.0.0/16
-    serviceSubnets:
-      - 10.96.0.0/12
     cni:
-      name: none # Disables CNI installation.
+      name: none
+    dnsDomain: ${talos_k8s_cluster_domain}
   proxy:
     disabled: true
+  
 
 machine:
-  nodeLabels:
-    topology.kubernetes.io/region: ${topology_region}
-
   install:
     disk: ${install_disk_device}
     image: ${install_image_url}
     bootloader: true
     wipe: false
-
-  sysctls:
-    net.bridge.bridge-nf-call-ip6tables: "1"
-    net.bridge.bridge-nf-call-iptables: "1"
-    net.ipv4.ip_forward: "1"
-    net.ipv4.conf.all.accept_source_route: "0"
-    net.ipv4.conf.default.accept_source_route: "0"
-    net.ipv6.conf.all.accept_source_route: "0"
-    net.ipv6.conf.default.accept_source_route: "0"
-    net.ipv4.conf.all.accept_redirects: "0"
-    net.ipv4.conf.default.accept_redirects: "0"
-    net.ipv6.conf.all.accept_redirects: "0"
-    net.ipv6.conf.default.accept_redirects: "0"
-    net.ipv4.conf.all.secure_redirects: "0"
-    net.ipv4.conf.default.secure_redirects: "0"
-    net.ipv4.conf.all.log_martians: "1"
-    net.ipv4.conf.default.log_martians: "1"
-    net.ipv4.icmp_echo_ignore_broadcasts: "1"
-    net.ipv4.icmp_ignore_bogus_error_responses: "1"
-    net.ipv4.tcp_syncookies: "1"
-    net.ipv4.conf.all.rp_filter: "1"
-    net.ipv4.conf.default.rp_filter: "1"
-
-  kernel:
-    modules:
-      - name: br_netfilter
-        parameters:
-          - nf_conntrack_max=131072
 
   network:
     nameservers:
@@ -56,19 +21,10 @@ machine:
       - ${server}
 %{ endfor ~}
 
-  files:
-    - path: /var/cri/conf.d/metrics.toml
-      op: create
-      content: |
-        [metrics]
-        address = "0.0.0.0:11234"
-
   features:
     kubePrism:
       enabled: true
       port: 7445
     # Configure hostDNS to control DNS resolution behavior
     hostDNS:
-      enabled: true
       forwardKubeDNSToHost: false
-
