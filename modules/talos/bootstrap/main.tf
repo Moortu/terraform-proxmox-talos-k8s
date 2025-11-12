@@ -1,3 +1,17 @@
+terraform {
+  required_providers {
+    talos = {
+      source = "siderolabs/talos"
+    }
+    time = {
+      source = "opentofu/time"
+    }
+    local = {
+      source = "hashicorp/local"
+    }
+  }
+}
+
 resource "talos_machine_bootstrap" "this" {
   client_configuration = var.client_configuration
   node                 = var.control_plane_nodes[0].ip

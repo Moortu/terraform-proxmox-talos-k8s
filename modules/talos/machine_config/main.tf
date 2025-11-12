@@ -1,3 +1,11 @@
+terraform {
+  required_providers {
+    talos = {
+      source = "siderolabs/talos"
+    }
+  }
+}
+
 locals {
   # Prefer object inputs, fall back to legacy scalars
   cluster_name       = try(var.meta.cluster_name, var.talos_k8s_cluster_name)

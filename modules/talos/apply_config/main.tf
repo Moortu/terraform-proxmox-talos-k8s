@@ -1,3 +1,11 @@
+terraform {
+  required_providers {
+    talos = {
+      source = "siderolabs/talos"
+    }
+  }
+}
+
 resource "talos_machine_configuration_apply" "this" {
   for_each = { for idx, node in var.nodes_network : idx => node }
 

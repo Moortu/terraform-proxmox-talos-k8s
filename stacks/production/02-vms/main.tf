@@ -29,7 +29,8 @@ module "control_plane_vms" {
 
   providers = {
     macaddress = macaddress
-    proxmox = proxmox
+    proxmox    = proxmox
+    time       = time
   }
 
   proxmox_nodes             = var.proxmox_nodes
@@ -51,7 +52,8 @@ module "workers_vms" {
 
   providers = {
     macaddress = macaddress
-    proxmox = proxmox
+    proxmox    = proxmox
+    time       = time
   }
 
   proxmox_nodes             = var.proxmox_nodes

@@ -1,3 +1,11 @@
+terraform {
+  required_providers {
+    talos = {
+      source = "siderolabs/talos"
+    }
+  }
+}
+
 locals {
   talos_version = try(var.versions.talos, var.talos_version)
 }
