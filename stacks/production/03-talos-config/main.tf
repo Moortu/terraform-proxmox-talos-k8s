@@ -78,7 +78,7 @@ module "talos_config_cp" {
   talos_name_servers              = var.talos_name_servers
   k8s_version                     = var.k8s_version
   talos_install_disk_device       = var.talos_install_disk_device
-  talos_install_image_url         = var.talos_install_image_url
+  talos_install_image_url         = data.terraform_remote_state.iso.outputs.talos_installer_image_url
   talos_control_plane_vms_network = data.terraform_remote_state.vms.outputs.talos_control_plane_vms_network
   talos_k8s_cluster_domain        = var.talos_k8s_cluster_domain
   
@@ -109,7 +109,7 @@ module "talos_config_worker" {
   talos_name_servers              = var.talos_name_servers
   k8s_version                     = var.k8s_version
   talos_install_disk_device       = var.talos_install_disk_device
-  talos_install_image_url         = var.talos_install_image_url
+  talos_install_image_url         = data.terraform_remote_state.iso.outputs.talos_installer_image_url
   talos_control_plane_vms_network = data.terraform_remote_state.vms.outputs.talos_control_plane_vms_network
   talos_k8s_cluster_domain        = var.talos_k8s_cluster_domain
   

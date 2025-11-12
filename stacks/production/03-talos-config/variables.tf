@@ -46,7 +46,6 @@ variable "talos_install_disk_device" {
 
 variable "talos_install_image_url" {
   type = string
-  default = "${data.terraform_remote_state.iso.outputs.talos_iso_image_location}"
 }
 
 variable "talos_k8s_cluster_domain" {
