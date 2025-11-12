@@ -3,6 +3,37 @@ variable "proxmox_nodes" {
   type        = map(any)
 }
 
+variable "talos_iso_destination_filename" {
+  type    = string
+  default = "talos-amd64.iso"
+}
+
+variable "talos_iso_destination_storage_pool" {
+  type    = string
+  default = "local"
+}
+
+variable "talos_version" {
+  # https://github.com/siderolabs/talos/releases
+  type    = string
+  default = "1.11.5"
+}
+
+variable "control_plane_first_id" {
+  type    = number
+  default = 8100
+}
+
+variable "control_plane_first_ip" {
+  type    = number
+  default = 161
+}
+
+variable "control_plane_name_prefix" {
+  type    = string
+  default = "talos-control-plane"
+}
+
 variable "worker_node_first_id" {
   type    = number
   default = 8200
@@ -31,8 +62,4 @@ variable "talos_network_cidr" {
 variable "talos_network_gateway" {
   type    = string
   default = "10.0.0.1"
-}
-
-variable "talos_iso_image_location" {
-  type = string
 }

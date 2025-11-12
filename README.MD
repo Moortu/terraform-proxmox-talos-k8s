@@ -1,11 +1,37 @@
-# Terraform Proxmox Talos K8s
+# Terraform Proxmox Talos K8s with Terramate
 
-A comprehensive Infrastructure as Code (IaC) solution for deploying a production-ready Kubernetes cluster using [Talos Linux](https://www.talos.dev/) on Proxmox VMs with GitOps integration. This project allows you to easily spin up a fully functional Kubernetes cluster with Cilium CNI and optional GitOps tools (FluxCD and/or ArgoCD).
+A comprehensive Infrastructure as Code (IaC) solution for deploying a production-ready Kubernetes cluster using [Talos Linux](https://www.talos.dev/) on Proxmox VMs with GitOps integration, orchestrated by [Terramate](https://terramate.io/).
+
+This project allows you to easily spin up a fully functional Kubernetes cluster with Cilium CNI and optional GitOps tools (FluxCD and/or ArgoCD) using modular, reusable Terraform modules managed by Terramate for better organization and orchestration.
 
 > *Inspired by [rgl/terraform-proxmox-talos](https://github.com/rgl/terraform-proxmox-talos) and [roeldev/iac-talos-cluster](https://github.com/roeldev/iac-talos-cluster).*
 
+## Quick Setup
+
+```bash
+# 1. Clone and configure
+git clone <repo>
+cd terraform-proxmox-talos-k8s
+
+# 2. Create ONE configuration file
+cp example.tfvars stacks/production/production.auto.tfvars
+nano stacks/production/production.auto.tfvars  # Edit your Proxmox credentials and network
+
+# 3. Copy to all stacks
+for dir in stacks/production/*/; do cp stacks/production/production.auto.tfvars "$dir/"; done
+
+# 4. Deploy
+terramate generate
+terramate run tofu init
+terramate run tofu apply
+```
+
+That's it! Terramate will run all stacks in dependency order.
+
 ## Features
 
+- **Terramate Orchestration**: Organized stack-based infrastructure with code generation for providers, backends, and locals
+- **Modular Architecture**: Split modules for better reusability (compute/vm_base, talos/secrets, talos/machine_config, talos/apply_config, talos/bootstrap)
 - **Automated Kubernetes Deployment**: Deploy a complete Kubernetes cluster with a single command
 - **Talos Linux**: Secure, immutable Linux distribution built for Kubernetes
 - **Proxmox Integration**: Seamless creation and management of Proxmox VMs
@@ -14,12 +40,12 @@ A comprehensive Infrastructure as Code (IaC) solution for deploying a production
 - **Multi-Git Provider Support**: Compatible with GitHub, GitLab, and Gitea (cloud or self-hosted)
 - **Flexible Networking**: Support for static IPs, DHCP, custom MAC addresses, and sorted IP assignments
 - **DNS Configuration**: Automatic generation of DNS records for all nodes during plan phase
-- **Customizable VM Placement**: Deploy control planes and workers across different Proxmox nodes 
-- **Cilium Management Options**: Deploy Cilium via Talos manifests or through GitOps tools
+- **Customizable VM Placement**: Deploy control planes and workers across different Proxmox nodes
 
 ## Prerequisites
 
 ### Required
+- [Terramate](https://terramate.io/) v0.8.0+ (see [QUICKSTART.md](./QUICKSTART.md) for installation)
 - [OpenTofu](https://opentofu.org/) v1.7.0+ or [Terraform](https://www.terraform.io/) v1.7.0+
 - Proxmox VE server v7.0+
 - Proxmox API token with appropriate permissions (see [API token setup](#proxmox-api-token-setup))
@@ -30,6 +56,11 @@ A comprehensive Infrastructure as Code (IaC) solution for deploying a production
 - Git repository for storing cluster manifests (GitHub, GitLab, or Gitea)
 - Personal Access Token with appropriate permissions for the Git provider
 - See [README-gitops.md](./README-gitops.md) for detailed requirements
+
+### Documentation
+- **[QUICKSTART.md](./QUICKSTART.md)** - Get started with Terramate and deployment
+- **[TERRAMATE-MIGRATION.md](./TERRAMATE-MIGRATION.md)** - Detailed migration guide and stack structure
+- **[README-TERRAMATE.md](./README-TERRAMATE.md)** - Terramate concepts and commands
 
 ## Network Configuration Options
 
@@ -249,15 +280,23 @@ central_iso_storage = false # Will copy ISO to each node's local storage
 
 ## Quick Start
 
-### 1. Clone the Repository
+### 1. Install Terramate
+
+```bash
+bash install-terramate.sh
+```
+
+See [QUICKSTART.md](./QUICKSTART.md) for detailed installation instructions.
+
+### 2. Clone the Repository
 ```bash
 git clone https://github.com/your-username/terraform-proxmox-talos-k8s.git
 cd terraform-proxmox-talos-k8s
 ```
 
-### 2. Configure the Deployment
+### 3. Configure the Deployment
 
-Create a `myvars.auto.tfvars` file with your configuration values based on [example.tfvars](./example.tfvars).
+Create a `stacks/production/cluster/myvars.auto.tfvars` file with your configuration values based on [example.tfvars](./example.tfvars).
 
 ```hcl
 # Essential configuration (sample values)
@@ -284,16 +323,16 @@ proxmox_nodes = {
 }
 ```
 
-See the full [example.tfvars](./example.tfvars) file for complete configuration options including:
-- Cilium CNI configuration
-- GitOps integration (FluxCD/ArgoCD)
-- VM specifications
-- Network options
+See the full [example.tfvars](./example.tfvars) file for complete configuration options.
 
-### 3. Deploy the Cluster
+### 4. Deploy the Cluster with Terramate
 
 ```bash
-# Initialize Terraform/OpenTofu
+# Generate Terramate code (providers, backend, locals)
+terramate generate
+
+# Initialize OpenTofu/Terraform in the stack
+cd stacks/production/cluster
 tofu init -upgrade
 
 # Preview changes and check the DNS configuration
@@ -302,6 +341,8 @@ tofu plan
 # Deploy the cluster
 tofu apply -auto-approve
 ```
+
+See [QUICKSTART.md](./QUICKSTART.md) for more details.
 
 ### 4. Configure DNS
 
@@ -443,45 +484,78 @@ talos_iso_destination_server = "pve-node-01"  # Node to store the central ISO
 central_iso_storage = false  # ISO downloaded to each Proxmox node
 ```
 
+## Module Architecture
+
+The project uses modular, reusable Terraform modules organized by concern:
+
+### Compute Modules
+- **`compute/vm_base`** - Generic VM creation logic (reusable for any VM type)
+- **`create_vms_control_plane`** - Control plane VM orchestration (uses vm_base)
+- **`create_vms_workers`** - Worker VM orchestration (uses vm_base)
+
+### Talos Modules
+- **`talos/secrets`** - Generate Talos machine secrets
+- **`talos/machine_config`** - Generate machine configurations (controlplane or worker)
+- **`talos/apply_config`** - Apply configurations to nodes
+- **`talos/bootstrap`** - Bootstrap cluster and export kubeconfig/talosconfig
+
+### Other Modules
+- **`download_talos_iso`** - Download Talos ISO to Proxmox
+- **`generate_cilium_manifest`** - Generate Cilium manifests
+- **`fluxcd`** - Deploy FluxCD for GitOps
+
+See [TERRAMATE-MIGRATION.md](./TERRAMATE-MIGRATION.md) for detailed module documentation.
+
 ## Configuration Options
 
-Key configuration variables include:
+Key configuration variables in `stacks/production/cluster/variables.tf`:
 
 | Variable | Description | Default |
 |----------|-------------|--------|
 | `talos_k8s_cluster_name` | Name of the Kubernetes cluster | `talos-cluster` |
 | `talos_k8s_cluster_vip` | Virtual IP for the control plane | *Required* |
-| `talos_version` | Talos Linux version | `1.5.5` |
-| `k8s_version` | Kubernetes version | `1.28.0` |
+| `talos_version` | Talos Linux version | `1.11.5` |
+| `k8s_version` | Kubernetes version | `1.34.2` |
 | `central_iso_storage` | Use centralized ISO storage | `true` |
 | `talos_iso_destination_server` | Node to store centralized ISO | First node if empty |
-| `control_plane_nodes` | Control plane node configurations | *Required* |
-| `worker_nodes` | Worker node configurations | *Required* |
+| `proxmox_nodes` | Proxmox nodes and VM configurations | *Required* |
 | `deploy_fluxcd` | Whether to deploy FluxCD | `false` |
 | `deploy_argocd` | Whether to deploy ArgoCD | `false` |
 | `include_cilium_inline_manifests` | Whether to include Cilium manifests in Talos | `true` |
 
-See the `vars-*.tf` files for complete configuration options.
+See `stacks/production/cluster/variables.tf` for complete configuration options.
 
 ## Cluster Management
 
 ### Scale the Cluster
 
-Modify the `control_plane_nodes` or `worker_nodes` variables in your `myvars.auto.tfvars` file and run `tofu apply`.
+Modify the `proxmox_nodes` variable in your `stacks/production/cluster/myvars.auto.tfvars` file and run:
+
+```bash
+cd stacks/production/cluster
+tofu apply
+```
 
 ### Upgrade the Cluster
 
-Update the `talos_version` and/or `k8s_version` variables and run `tofu apply`.
+Update the `talos_version` and/or `k8s_version` variables and run:
+
+```bash
+cd stacks/production/cluster
+tofu apply
+```
 
 ### Destroy the Cluster
 
 ```bash
+cd stacks/production/cluster
 tofu destroy -auto-approve
 ```
 
 ### Recreate the Cluster
 
 ```bash
+cd stacks/production/cluster
 tofu destroy -auto-approve
 tofu apply -auto-approve
 ```
@@ -504,10 +578,49 @@ This project is available under the MIT License.
 - [Cilium](https://cilium.io/) for the powerful CNI
 - [FluxCD](https://fluxcd.io/) and [ArgoCD](https://argoproj.github.io/argo-cd/) for GitOps solutions
 - [rgl/terraform-proxmox-talos](https://github.com/rgl/terraform-proxmox-talos) and [roeldev/iac-talos-cluster](https://github.com/roeldev/iac-talos-cluster) for inspiration
+## Project Structure
+
+```
+.
+├── terramate.tm.hcl                 # Root Terramate config
+├── config/                          # Terramate globals and code generation
+│   ├── globals.tm.hcl               # Global variables
+│   ├── generate_providers.tm.hcl    # Provider generation
+│   ├── generate_backend.tm.hcl      # Backend generation
+│   └── generate_locals.tm.hcl       # Locals generation
+├── stacks/
+│   └── production/
+│       ├── 01-talos-iso/            # ISO download stack
+│       ├── 02-vms/                  # VM creation stack (optional)
+│       └── cluster/                 # Main cluster stack
+│           ├── stack.tm.hcl         # Stack metadata
+│           ├── main.tf              # Infrastructure code
+│           ├── variables.tf         # Variable definitions
+│           ├── outputs.tf           # Stack outputs
+│           └── myvars.auto.tfvars   # Your configuration
+├── modules/                         # Reusable Terraform modules
+│   ├── compute/
+│   │   ├── vm_base/
+│   │   ├── vm_group_cp/
+│   │   └── vm_group_workers/
+│   ├── talos/
+│   │   ├── secrets/
+│   │   ├── machine_config/
+│   │   ├── apply_config/
+│   │   └── bootstrap/
+│   ├── download_talos_iso/
+│   ├── generate_cilium_manifest/
+│   └── fluxcd/
+├── example.tfvars                   # Example configuration
+├── QUICKSTART.md                    # Quick start guide
+├── TERRAMATE-MIGRATION.md           # Terramate migration guide
+└── README-TERRAMATE.md              # Terramate documentation
+```
+
 ## Additional Implementation Notes
 
 ### Resource Allocation and VM Placement
-- You can specify which VMs run on which Proxmox nodes with detailed resource allocation using the `proxmox_nodes` variable
+- Specify which VMs run on which Proxmox nodes using the `proxmox_nodes` variable
 - Control planes and workers can be distributed across any number of Proxmox nodes
 - Each VM can have custom specifications (CPU, memory, disk size) configured independently
 
@@ -516,12 +629,13 @@ This project is available under the MIT License.
 - This works seamlessly for single-interface setups
 - Multiple network interfaces on VMs may cause issues with automatic IP detection (untested)
 
-### Configuration Assistance
-- Most variables in `.tfvars` files have tooltips in supported editors for easier configuration
-- Complex maps like `proxmox_nodes` may not have detailed tooltips
-- Refer to the [example.tfvars](./example.tfvars) file for proper structure
+### Terramate Stack Workflow
+- Terramate generates provider, backend, and locals configurations automatically
+- Each stack has its own state file and can be deployed independently
+- Use `terramate generate` to create generated files before running `tofu init`
+- See [TERRAMATE-MIGRATION.md](./TERRAMATE-MIGRATION.md) for detailed workflow
 
 ### Talos Lifecycle Management
-- The module will correctly handle upgrades and maintenance of Talos nodes
-- When adding new nodes, they will automatically join the cluster
-- When removing nodes, run `terraform destroy` to properly clean up resources
+- The modules correctly handle upgrades and maintenance of Talos nodes
+- When adding new nodes, they automatically join the cluster
+- When removing nodes, run `tofu destroy` to properly clean up resources

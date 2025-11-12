@@ -1,7 +1,8 @@
 variable "cilium_version" {
   description = "Version of Cilium to deploy"
+  # https://helm.cilium.io/
   type        = string
-  default     = "1.15.6"
+  default     = "1.18.4"
 }
 
 variable "use_kube_proxy" {
@@ -12,8 +13,9 @@ variable "use_kube_proxy" {
 
 variable "k8s_version" {
   description = "Kubernetes version to use"
+  # https://kubernetes.io/releases/
   type        = string
-  default     = "1.31.0"
+  default     = "1.34.2"
 }
 
 variable "k8s_service_host" {

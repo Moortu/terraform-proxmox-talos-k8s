@@ -54,8 +54,9 @@ variable "cilium_enabled" {
 
 variable "cilium_version" {
   description = "Version of Cilium to deploy through GitOps"
+  # https://helm.cilium.io/
   type        = string
-  default     = "1.15.6"
+  default     = "1.18.4"
 }
 
 variable "cilium_values" {
@@ -66,8 +67,9 @@ variable "cilium_values" {
 
 variable "argocd_version" {
   description = "Version of ArgoCD to deploy"
+  # https://artifacthub.io/packages/helm/argo/argo-cd
   type        = string
-  default     = "5.51.4" # Corresponds to ArgoCD v2.9.5
+  default     = "5.53.12"
 }
 
 variable "argocd_namespace" {
@@ -78,6 +80,7 @@ variable "argocd_namespace" {
 
 variable "flux_version" {
   description = "Version of Flux to deploy"
+  # https://search.opentofu.org/provider/fluxcd/flux/latest
   type        = string
   default     = "2.2.3"
 }

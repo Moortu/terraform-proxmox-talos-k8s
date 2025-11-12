@@ -24,10 +24,10 @@ variable "talos_iso_destination_storage_pool" {
 }
 
 variable "talos_version" {
-    # https://github.com/siderolabs/talos/releases
     description = "Talos version to use"
+    # https://github.com/siderolabs/talos/releases
     type        = string
-    default     = "1.8.0"
+    default     = "1.11.5"
 }
 
 variable "talos_architecture" {
@@ -102,4 +102,27 @@ variable "proxmox_nodes" {
     })))
 
   }))
+}
+
+# New object-based inputs (optional). These enable cleaner module usage.
+# Backward compatible: if not provided, existing scalar variables are used.
+
+variable "iso" {
+  description = "Talos ISO inputs"
+  type = object({
+    central_storage  = bool
+    server           = string
+    storage_pool     = string
+    filename_tpl     = string
+    arch             = string
+  })
+  default = null
+}
+
+variable "versions" {
+  description = "Version matrix"
+  type = object({
+    talos = string
+  })
+  default = null
 }

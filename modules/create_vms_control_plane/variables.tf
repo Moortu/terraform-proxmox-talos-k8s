@@ -1,126 +1,38 @@
+variable "proxmox_nodes" {
+  description = "Proxmox nodes configuration"
+  type        = map(any)
+}
+
 variable "control_plane_first_id" {
-  description = "First id of a control-plane"
-  type        = number
-  default     = 8101
+  type    = number
+  default = 8100
 }
 
 variable "control_plane_first_ip" {
-  description = "First ip of a control-plane"
-  type        = number
-  default     = 161
-}
-
-variable "talos_network_dhcp" {
-  description = "If dhcp is enabled and configured"
-  type        = bool
-  default     = true
-}
-
-variable "talos_network_cidr" {
-  description = "Network address in CIDR notation"
-  type        = string
-  default     = "10.0.0.0/16"
-}
-
-variable "talos_network_gateway" {
-  description = "Gateway of the network"
-  type        = string
-  default     = "10.0.0.1"
-}
-
-variable "talos_version" {
-    # https://github.com/siderolabs/talos/releases
-    description = "Talos version to use"
-    type        = string
-    default     = "1.8.0"
-}
-
-variable "talos_iso_image_location" {
-  description = "Central talos iso image location (used when central_iso_storage is true)"
-  type        = string
-  default     = null
-}
-
-variable "talos_iso_node_paths" {
-  description = "Map of node names to ISO file paths (used when central_iso_storage is false)"
-  type        = map(string)
-  default     = {}
-}
-
-variable "central_iso_storage" {
-  description = "If true, use the central ISO storage location for all nodes"
-  type        = bool
-  default     = true
+  type    = number
+  default = 161
 }
 
 variable "control_plane_name_prefix" {
-  description = "Name prefix used in both VM name and hostname, for a control-plane"
-  type        = string
-  default     = "talos-control-plane"
+  type    = string
+  default = "talos-control-plane"
 }
 
-variable "proxmox_nodes" {
-  description = "Proxmox servers on which the talos cluster will be deployed"
-  type = map(object({
-    control_planes = optional(list(object({
-      name = string
-      # Additional kubernetes node labels to add to the worker node(s)
-      node_labels = optional(map(string), {})
-      # The name of the network bridge on the Proxmox host
-      network_bridge = optional(string, "vmbr0")
-      # Predefined mac address to be used by the vm
-      mac_address = optional(string)
-      # The type of the CPU
-      cpu_type = optional(string, "host")
-      # The amount of sockets to give the control plane 
-      cpu_sockets = optional(number, 1)
-      # The amount of CPU cores to give the worker node(s)
-      cpu_cores = optional(number, 2)
-      # The amount of memory in GiB to give the worker node(s)
-      memory = optional(number, 8)
-      # The size of the boot disk in GiB to give the worker node(s)
-      boot_disk_size = optional(number, 0)
-      # The name of the storage pool where virtual hard disks will be stored
-      boot_disk_storage_pool = string
-      data_disks = optional(list(object({
-        device_name = string
-        mount_point = string
-        # The size of the data disk in GiB per worker node
-        size = number
-        # The name of the storage pool where the disk be stored
-        storage_pool = optional(string, "")
-      })), [])
-    })))
+variable "talos_network_dhcp" {
+  type    = bool
+  default = true
+}
 
-    workers = optional(list(object({
-      name = string
-      # Additional kubernetes node labels to add to the worker node(s)
-      node_labels = optional(map(string), {})
-      # The name of the network bridge on the Proxmox host
-      network_bridge = optional(string, "vmbr0")
-      # Predefined mac address to be used by the vm
-      mac_address = optional(string)
-      # The type of the CPU
-      cpu_type = optional(string, "host")
-      # The amount of sockets to give the control plane 
-      cpu_sockets = optional(number, 1)
-      # The amount of CPU cores to give the worker node(s)
-      cpu_cores = optional(number, 2)
-      # The amount of memory in GiB to give the worker node(s)
-      memory = optional(number, 8)
-      # The size of the boot disk in GiB to give the worker node(s)
-      boot_disk_size = optional(number, 0)
-      # The name of the storage pool where virtual hard disks will be stored
-      boot_disk_storage_pool = string
-      data_disks = optional(list(object({
-        device_name = string
-        mount_point = string
-        # The size of the data disk in GiB per worker node
-        size = number
-        # The name of the storage pool where the disk be stored
-        storage_pool = optional(string, "")
-      })), [])
-    })))
+variable "talos_network_cidr" {
+  type    = string
+  default = "10.0.0.0/16"
+}
 
-  }))
+variable "talos_network_gateway" {
+  type    = string
+  default = "10.0.0.1"
+}
+
+variable "talos_iso_image_location" {
+  type = string
 }

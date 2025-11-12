@@ -40,3 +40,10 @@ variable "talos_k8s_cluster_domain" {
   type        = string
   default     = ""
 }
+
+variable "flux_version" {
+  description = "Version of Flux to deploy"
+  # https://search.opentofu.org/provider/fluxcd/flux/latest
+  type        = string
+  default     = "2.2.3"
+}

@@ -1,0 +1,200 @@
+TERRAMATE PROJECT STRUCTURE
+===========================
+
+terraform-proxmox-talos-k8s/
+│
+├── 📄 terramate.tm.hcl              # Root Terramate configuration
+├── 📄 QUICKSTART.md                 # Quick start guide
+├── 📄 README-TERRAMATE.md           # Main Terramate documentation
+├── 📄 TERRAMATE-MIGRATION.md        # Detailed migration guide
+│
+├── 📁 config/                        # Shared Terramate configuration
+│   ├── globals.tm.hcl               # Global variables (versions, paths)
+│   ├── generate_providers.tm.hcl    # Auto-generate provider configs
+│   └── generate_backend.tm.hcl      # Auto-generate backend configs
+│
+├── 📁 stacks/                        # Infrastructure stacks
+│   ├── .gitignore                   # Stack-specific gitignore
+│   │
+│   └── 📁 production/               # Production environment
+│       │
+│       ├── 📁 01-talos-iso/         # [OPTIONAL] Separate ISO stack
+│       │   ├── stack.tm.hcl         # Stack metadata
+│       │   ├── main.tf              # ISO download logic
+│       │   ├── variables.tf         # Input variables
+│       │   └── outputs.tf           # Outputs
+│       │
+│       └── 📁 cluster/              # [MAIN] Complete cluster stack
+│           ├── stack.tm.hcl         # Stack definition
+│           ├── main.tf              # Main infrastructure code
+│           ├── variables.tf         # All variables
+│           ├── outputs.tf           # Cluster outputs
+│           ├── terraform.tfvars.example  # Example config
+│           ├── terraform.tfvars     # Your config (gitignored)
+│           ├── README.md            # Stack documentation
+│           └── _generated_*.tf      # Auto-generated (gitignored)
+│
+└── 📁 modules/                       # Reusable Terraform modules (unchanged)
+    ├── download_talos_iso/
+    ├── create_vms_control_plane/
+    ├── create_vms_workers/
+    ├── create_talos_config/
+    ├── boot_talos_nodes/
+    ├── generate_cilium_manifest/
+    ├── fluxcd/
+    └── argocd/
+
+
+WORKFLOW
+========
+
+1. Configure
+   └─> Edit stacks/production/cluster/terraform.tfvars
+
+2. Generate
+   └─> terramate generate
+       └─> Creates _generated_providers.tf in each stack
+
+3. Deploy
+   └─> cd stacks/production/cluster
+       └─> terraform init
+           └─> terraform apply
+
+
+STACK DEPENDENCIES (if using separate stacks)
+=============================================
+
+01-talos-iso
+    │
+    ├──> Downloads Talos ISO to Proxmox
+    │
+    └──> Outputs: talos_iso_path, talos_installer_image_url
+            │
+            ▼
+        cluster
+            │
+            ├──> Creates VMs
+            ├──> Configures Talos
+            ├──> Bootstraps K8s
+            └──> Deploys GitOps
+
+
+CURRENT SETUP
+=============
+
+You have ONE main stack:
+  stacks/production/cluster/
+
+This stack contains ALL components:
+  ✓ ISO download
+  ✓ VM creation
+  ✓ Talos configuration
+  ✓ Cluster bootstrap
+  ✓ GitOps deployment
+
+This is the RECOMMENDED approach for most users.
+
+
+ALTERNATIVE: SPLIT STACKS
+==========================
+
+For advanced users, you can split into multiple stacks:
+
+stacks/production/
+├── 01-talos-iso/       # ISO preparation
+├── 02-vms/             # VM creation
+├── 03-talos-config/    # Talos configuration
+├── 04-bootstrap/       # Cluster bootstrap
+└── 05-gitops/          # GitOps deployment
+
+Benefits:
+  ✓ Granular control
+  ✓ Independent updates
+  ✓ Parallel execution
+
+Drawbacks:
+  ✗ More complex
+  ✗ State management
+  ✗ Inter-stack dependencies
+
+
+TERRAMATE COMMANDS
+==================
+
+List stacks:
+  $ terramate list
+
+Generate code:
+  $ terramate generate
+
+Run in all stacks:
+  $ terramate run terraform init
+  $ terramate run terraform plan
+  $ terramate run terraform apply
+
+Run in specific stack:
+  $ terramate run --chdir stacks/production/cluster terraform apply
+
+Run changed stacks only:
+  $ terramate run --changed terraform apply
+
+Parallel execution:
+  $ terramate run --parallel 3 terraform plan
+
+
+ENVIRONMENT VARIABLES
+=====================
+
+Terramate respects standard Terraform environment variables:
+
+  TF_VAR_*              # Variable values
+  PROXMOX_VE_API_TOKEN  # Proxmox auth
+  KUBECONFIG            # Kubernetes config
+  TALOSCONFIG           # Talos config
+
+
+GENERATED FILES
+===============
+
+After running 'terramate generate', you'll see:
+
+stacks/production/cluster/
+└── _generated_providers.tf
+
+This file contains:
+  ✓ Terraform version constraints
+  ✓ Provider requirements
+  ✓ Provider configurations
+
+DO NOT EDIT generated files manually!
+They are recreated on each 'terramate generate'.
+
+
+GITIGNORE
+=========
+
+The following are gitignored:
+
+  ✓ **/_generated_*.tf
+  ✓ **/.terraform/
+  ✓ **/terraform.tfstate*
+  ✓ **/*.tfvars (except *.tfvars.example)
+  ✓ **/generated/ (kubeconfig, talosconfig)
+
+
+MIGRATION NOTES
+===============
+
+Old files (in project root):
+  main.tf              → stacks/production/cluster/main.tf
+  outputs.tf           → stacks/production/cluster/outputs.tf
+  vars-*.tf            → stacks/production/cluster/variables.tf
+  versions.tf          → stacks/production/cluster/variables.tf
+  example.tfvars       → stacks/production/cluster/terraform.tfvars.example
+
+Modules:
+  modules/             → Unchanged, referenced as ../../../modules/
+
+State:
+  terraform.tfstate    → stacks/production/cluster/terraform.tfstate
+                         (or remote backend if configured)

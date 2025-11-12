@@ -53,6 +53,7 @@ variable "git_path" {
 
 variable "argocd_version" {
   description = "Version of Argo CD to deploy"
+  # https://artifacthub.io/packages/helm/argo/argo-cd
   type        = string
   default     = "5.53.12"
 }
