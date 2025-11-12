@@ -59,7 +59,7 @@ data "talos_machine_configuration" "this" {
   examples           = false
 
   config_patches = concat(
-    [templatefile("${path.root}/modules/talos-config-templates/common.yaml.tftpl", local.talos_mc_defaults)],
+    [templatefile("${path.module}/templates/common.yaml.tftpl", local.talos_mc_defaults)],
     var.machine_type == "controlplane" && var.include_cilium && length(local.cilium_inline_manifest_patch) > 0 ? [local.cilium_inline_manifest_patch] : []
   )
 }
