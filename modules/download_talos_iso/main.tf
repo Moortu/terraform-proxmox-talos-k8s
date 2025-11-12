@@ -19,14 +19,12 @@ data "talos_image_factory_extensions_versions" "this" {
   talos_version = "v${local.talos_version}"
   filters = {
     names = [
-      "qemu-guest-agent",
-      # "amd-ucode"
-      # "tailscale",
+      "qemu-guest-agen",
+      "tailscale",
     ]
   }
 }
 
-# see https://registry.terraform.io/providers/siderolabs/talos/0.6.0/docs/resources/image_factory_schematic
 resource "talos_image_factory_schematic" "this" {
   schematic = yamlencode(
     {
@@ -38,6 +36,7 @@ resource "talos_image_factory_schematic" "this" {
     }
   )
 }
+
 
 # See https://registry.terraform.io/providers/siderolabs/talos/latest/docs/data-sources/image_factory_urls
 data "talos_image_factory_urls" "generated_url" {
