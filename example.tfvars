@@ -40,6 +40,9 @@ talos_iso_destination_server      = "pve-node-01"
 # Storage pool where the ISO will be stored (must exist on all nodes if central_iso_storage=false)
 talos_iso_destination_storage_pool = "local"
 
+download_method    = "remote"
+local_download_dir = ".downloads"
+
 #######################################################################
 # KUBERNETES CLUSTER CONFIGURATION
 #######################################################################

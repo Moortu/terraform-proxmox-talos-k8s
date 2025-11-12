@@ -8,6 +8,10 @@ locals {
   arch           = try(var.iso.arch, var.talos_architecture)
 
   talos_iso_image_location = "${local.storage_pool}:iso/${replace(local.dst_filename, "%talos_version%", local.talos_version)}"
+
+  # Local download helpers (used when download_method == "local_upload")
+  local_iso_filename = replace(local.dst_filename, "%talos_version%", local.talos_version)
+  local_iso_path     = "${var.local_download_dir}/${local.local_iso_filename}"
 }
 
 data "talos_image_factory_extensions_versions" "this" {
@@ -56,7 +60,7 @@ locals {
 # Central ISO storage: Download to one location specified by talos_iso_destination_server
 # see https://registry.terraform.io/providers/bpg/proxmox/latest/docs/resources/virtual_environment_download_file
 resource "proxmox_virtual_environment_download_file" "talos_iso_central" {
-  count            = local.central ? 1 : 0
+  count            = var.download_method == "remote" && local.central ? 1 : 0
   content_type     = "iso"
   datastore_id     = local.storage_pool
   file_name        = replace(local.dst_filename, "%talos_version%", local.talos_version)
@@ -70,7 +74,7 @@ resource "proxmox_virtual_environment_download_file" "talos_iso_central" {
 # Per-node ISO storage: Download to each Proxmox node
 # see https://registry.terraform.io/providers/bpg/proxmox/latest/docs/resources/virtual_environment_download_file
 resource "proxmox_virtual_environment_download_file" "talos_iso_per_node" {
-  for_each         = local.central ? {} : var.proxmox_nodes
+  for_each         = var.download_method == "remote" && !local.central ? var.proxmox_nodes : {}
   content_type     = "iso"
   datastore_id     = local.storage_pool
   file_name        = replace(local.dst_filename, "%talos_version%", local.talos_version)
@@ -79,4 +83,49 @@ resource "proxmox_virtual_environment_download_file" "talos_iso_per_node" {
   # Using non-secureboot ISO to avoid factory.talos.dev 403s
   url              = data.talos_image_factory_urls.generated_url.urls.iso_secureboot
   verify           = false  # Skip URL verification to avoid permission issues
+}
+
+# ============================================================================
+# Optional: download locally then upload to Proxmox (avoids remote URL probe)
+# ============================================================================
+
+resource "null_resource" "download_iso" {
+  count = var.download_method == "local_upload" ? 1 : 0
+
+  triggers = {
+    url      = local.talos_iso_download_url
+    filename = local.local_iso_filename
+  }
+
+  provisioner "local-exec" {
+    command = "mkdir -p ${var.local_download_dir} && curl -fL --retry 5 --retry-delay 5 -o ${local.local_iso_path} ${local.talos_iso_download_url}"
+  }
+}
+
+resource "proxmox_virtual_environment_file" "iso_upload_central" {
+  count         = var.download_method == "local_upload" && local.central ? 1 : 0
+  content_type  = "iso"
+  datastore_id  = local.storage_pool
+  node_name     = local.dst_server != "" ? local.dst_server : keys(var.proxmox_nodes)[0]
+  file_name     = local.local_iso_filename
+
+  source_file {
+    path = local.local_iso_path
+  }
+
+  depends_on = [null_resource.download_iso]
+}
+
+resource "proxmox_virtual_environment_file" "iso_upload_per_node" {
+  for_each      = var.download_method == "local_upload" && !local.central ? var.proxmox_nodes : {}
+  content_type  = "iso"
+  datastore_id  = local.storage_pool
+  node_name     = each.key
+  file_name     = local.local_iso_filename
+
+  source_file {
+    path = local.local_iso_path
+  }
+
+  depends_on = [null_resource.download_iso]
 }
