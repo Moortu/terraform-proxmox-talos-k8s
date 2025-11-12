@@ -21,6 +21,13 @@ data "terraform_remote_state" "vms" {
   }
 }
 
+data "terraform_remote_state" "iso" {
+  backend = "local"
+  config = {
+    path = "../01-talos-iso/terraform.tfstate"
+  }
+}
+
 # ============================================================================
 # Generate Cilium Manifests (Optional)
 # ============================================================================
