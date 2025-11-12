@@ -99,3 +99,15 @@ variable "proxmox_api_url" {
   description = "The URL for the Proxmox API"
   type        = string
 }
+
+variable "download_method" {
+  description = "How to obtain the ISO in Proxmox. 'remote' downloads directly from the URL using Proxmox API. 'local_upload' downloads locally then uploads to Proxmox."
+  type        = string
+  default     = "remote"
+}
+
+variable "local_download_dir" {
+  description = "Local directory to store the ISO when download_method is 'local_upload'"
+  type        = string
+  default     = ".downloads"
+}

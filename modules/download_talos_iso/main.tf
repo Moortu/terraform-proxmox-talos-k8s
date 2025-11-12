@@ -107,7 +107,6 @@ resource "proxmox_virtual_environment_file" "iso_upload_central" {
   content_type  = "iso"
   datastore_id  = local.storage_pool
   node_name     = local.dst_server != "" ? local.dst_server : keys(var.proxmox_nodes)[0]
-  file_name     = local.local_iso_filename
 
   source_file {
     path = local.local_iso_path
@@ -121,7 +120,6 @@ resource "proxmox_virtual_environment_file" "iso_upload_per_node" {
   content_type  = "iso"
   datastore_id  = local.storage_pool
   node_name     = each.key
-  file_name     = local.local_iso_filename
 
   source_file {
     path = local.local_iso_path

@@ -31,5 +31,7 @@ module "talos_iso" {
   central_iso_storage                = var.central_iso_storage
   talos_version                      = var.talos_version
   talos_architecture                 = var.talos_architecture
+  download_method                    = var.download_method
+  local_download_dir                 = var.local_download_dir
   proxmox_nodes                      = var.proxmox_nodes
 }
