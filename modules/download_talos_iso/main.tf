@@ -45,7 +45,7 @@ data "talos_image_factory_urls" "generated_url" {
 
 # Add locals to output the URL for debugging
 locals {
-  # Get the URL that will be used to download the ISO
+  # Get the URL that will be used to download the ISO (non-secureboot to avoid 403)
   talos_iso_download_url = data.talos_image_factory_urls.generated_url.urls.iso_secureboot
   
   # Output the URL as a message using terraform console output
@@ -76,7 +76,7 @@ resource "proxmox_virtual_environment_download_file" "talos_iso_per_node" {
   file_name        = replace(local.dst_filename, "%talos_version%", local.talos_version)
   node_name        = each.key
   overwrite        = false
-  # Using secure boot ISO with AMD64 architecture (automatically selected by the image factory)
+  # Using non-secureboot ISO to avoid factory.talos.dev 403s
   url              = data.talos_image_factory_urls.generated_url.urls.iso_secureboot
   verify           = false  # Skip URL verification to avoid permission issues
 }

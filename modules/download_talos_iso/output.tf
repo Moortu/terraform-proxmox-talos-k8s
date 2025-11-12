@@ -6,13 +6,13 @@ output "talos_iso" {
 }
 
 output "talos_iso_url" {
-  description = "URL of the Talos ISO image (secureboot version)"
-  value       = data.talos_image_factory_urls.generated_url.urls.iso_secureboot
+  description = "URL of the Talos ISO image (non-secureboot)"
+  value       = data.talos_image_factory_urls.generated_url.urls.iso
 }
 
 output "talos_installer_image_url" {
-  description = "URL of the Talos installer image (secureboot version)"
-  value       = data.talos_image_factory_urls.generated_url.urls.installer_secureboot
+  description = "URL of the Talos installer image (non-secureboot)"
+  value       = data.talos_image_factory_urls.generated_url.urls.installer
 }
 
 output "debug_download_url" {

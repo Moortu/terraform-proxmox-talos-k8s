@@ -2,7 +2,7 @@ variable "talos_iso_destination_filename" {
   description = "Filename of the Talos iso image to store"
   type        = string
   # %version% is replaced by talos_version
-  default     = "talos-%talos_version%-metal-secureboot-amd64.iso"
+  default     = "talos-%talos_version%-metal-amd64.iso"
 }
 
 variable "talos_iso_destination_server" {
