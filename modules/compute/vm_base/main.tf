@@ -1,3 +1,17 @@
+terraform {
+  required_providers {
+    proxmox = {
+      source = "bpg/proxmox"
+    }
+    macaddress = {
+      source = "ivoronin/macaddress"
+    }
+    time = {
+      source = "opentofu/time"
+    }
+  }
+}
+
 locals {
   # Prefer object inputs, fall back to legacy scalars
   dhcp    = try(var.network.dhcp, var.talos_network_dhcp)

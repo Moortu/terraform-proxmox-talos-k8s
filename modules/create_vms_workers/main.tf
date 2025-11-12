@@ -1,3 +1,17 @@
+terraform {
+  required_providers {
+    proxmox = {
+      source = "bpg/proxmox"
+    }
+    macaddress = {
+      source = "ivoronin/macaddress"
+    }
+    time = {
+      source = "opentofu/time"
+    }
+  }
+}
+
 locals {
   # Collect and sort workers
   vm_workers_unsorted = flatten([
@@ -12,6 +26,12 @@ locals {
 
 module "vms" {
   source = "../compute/vm_base"
+
+  providers = {
+    proxmox    = proxmox
+    macaddress = macaddress
+    time       = time
+  }
 
   vm_specs = {
     name_prefix = var.worker_node_name_prefix
