@@ -3,7 +3,7 @@ stack {
   description = "Generate Talos machine secrets and configurations"
   id          = "prod-talos-config"
   
-  after = ["tag:vms"]
+  after = ["tag:iso", "tag:vms"]
   tags = ["talos-config"]
 }
 
