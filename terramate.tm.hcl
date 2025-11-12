@@ -10,7 +10,7 @@ terramate {
     run {
       env {
         # Ensure Terraform uses the stack directory as working directory
-        TF_DATA_DIR = "${terramate.stack.path.absolute}/.terraform"
+        TF_DATA_DIR = "${terramate.stack.path.fs.absolute}/.terraform"
       }
     }
   }
