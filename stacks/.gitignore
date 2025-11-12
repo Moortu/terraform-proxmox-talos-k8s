@@ -10,6 +10,8 @@
 **/_generated_*.tf
 **/_generated_*.hcl
 
+**/**/.downloads
+
 # Sensitive data
 **/generated/
 **/.terramate/
