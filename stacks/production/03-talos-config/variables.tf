@@ -45,7 +45,9 @@ variable "talos_install_disk_device" {
 }
 
 variable "talos_install_image_url" {
-  type = string
+  type        = string
+  default     = ""
+  description = "URL of the Talos installer image. If not provided, it will be read from the 01-talos-iso stack's outputs."
 }
 
 variable "talos_k8s_cluster_domain" {
