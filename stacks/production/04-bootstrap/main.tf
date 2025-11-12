@@ -13,10 +13,6 @@ provider "helm" {
 provider "talos" {
 }
 
-# Configure Flux provider
-provider "flux" {
-}
-
 # Configure GitHub provider (uses GITHUB_TOKEN env var)
 provider "github" {
 }
