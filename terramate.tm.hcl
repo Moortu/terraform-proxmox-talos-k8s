@@ -25,7 +25,7 @@ import {
 
 sharing_backend "default" {
   type     = terraform
-  filename = "sharing_generated.tm.tf"
+  filename = "_sharing_generated.tm.tf"
   command  = ["tofu", "output", "-json"]
 }
 
