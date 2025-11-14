@@ -1,6 +1,6 @@
 # Generate provider configuration for all stacks
 # This file is loaded by all stacks via the root terramate.tm.hcl import
-generate_hcl "generated/providers.tm.tf" {
+generate_hcl "_generated_providers.tm.tf" {
   content {
     terraform {
       required_version = global.terraform_version

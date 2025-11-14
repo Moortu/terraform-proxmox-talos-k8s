@@ -8,9 +8,9 @@ stack {
 }
 
 input "talos_iso_image_location" {
-  backend      = "default"
+  backend       = "default"
   from_stack_id = "prod-iso"
-  value        = outputs.talos_iso_image_location.value
+  value         = outputs.talos_iso_image_location_output.value
 }
 
 globals {

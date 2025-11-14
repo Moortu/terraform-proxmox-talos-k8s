@@ -7,3 +7,7 @@
 *.tmp
 kubeconfig.y*
 generated/*
+
+# Terramate generated files
+**/*_generated*.tm.tf
+**/*_sharing_generated.tm.tf

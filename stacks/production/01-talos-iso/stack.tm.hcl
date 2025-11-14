@@ -9,7 +9,7 @@ stack {
 
 output "talos_iso_image_location_output" {
   backend = "default"
-  value   = outputs.talos_iso_image_location.value
+  value   = local.talos_iso_path
 }
 
 globals {
