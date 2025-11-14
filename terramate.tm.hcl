@@ -25,12 +25,12 @@ import {
 
 sharing_backend "default" {
   type     = terraform
-  filename = "sharing_generated.tf"
+  filename = "generated/sharing_generated.tm.tf"
   command  = ["tofu", "output", "-json"]
 }
 
 # Generate provider configuration for all stacks
-generate_hcl "_generated_providers.tf" {
+generate_hcl "generated/providers.tm.tf" {
   content {
     terraform {
       required_version = global.terraform_version

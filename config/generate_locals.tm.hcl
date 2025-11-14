@@ -1,7 +1,7 @@
 # Generate common locals available in every stack
 # These locals are derived from Terramate globals and stack metadata
 
-generate_hcl "_generated_locals.tf" {
+generate_hcl "generated/locals.tm.tf" {
   content {
     locals {
       tm_meta = {
