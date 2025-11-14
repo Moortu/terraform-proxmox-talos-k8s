@@ -1,15 +1,15 @@
 stack {
   name        = "vms"
   description = "Create Proxmox VMs for Talos control planes and workers"
-  id          = "prod-vms"
+  id          = "vms"
   
   after = ["tag:iso"]
   tags = ["vms"]
 }
 
-input "talos_iso_image_location" {
+input "talos_iso_image_location_output" {
   backend       = "default"
-  from_stack_id = "prod-iso"
+  from_stack_id = "talos-iso"
   value         = outputs.talos_iso_image_location_output.value
 }
 

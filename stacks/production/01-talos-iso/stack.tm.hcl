@@ -1,7 +1,7 @@
 stack {
   name        = "talos-iso"
   description = "Download Talos ISO to Proxmox"
-  id          = "prod-iso"
+  id          = "talos-iso"
   tags        = ["iso"]
   
   after = []
