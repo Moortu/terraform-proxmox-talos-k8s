@@ -7,7 +7,7 @@ stack {
   tags = ["vms"]
 }
 
-input "talos_iso_image_location_output" {
+input "talos_iso_image_location" {
   backend       = "default"
   from_stack_id = "talos-iso"
   value         = outputs.talos_iso_image_location_output.value
