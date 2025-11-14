@@ -15,9 +15,7 @@ provider "proxmox" {
 }
 
 locals {
-  talos_iso_filename = replace(var.talos_iso_destination_filename, "%talos_version%", var.talos_version)
-  talos_iso_path = "${var.talos_iso_destination_storage_pool}:iso/${local.talos_iso_filename}"
-  talos_iso_image_location = local.talos_iso_path
+  talos_iso_image_location = var.talos_iso_image_location
 }
 
 # ============================================================================

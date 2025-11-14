@@ -63,23 +63,6 @@ variable "proxmox_nodes" {
   }))
 }
 
-
-variable "talos_iso_destination_filename" {
-  type    = string
-  default = "talos-amd64.iso"
-}
-
-variable "talos_iso_destination_storage_pool" {
-  type    = string
-  default = "local"
-}
-
-variable "talos_version" {
-  # https://github.com/siderolabs/talos/releases
-  type    = string
-  default = "1.11.5"
-}
-
 variable "control_plane_first_id" {
   type    = number
   default = 8100

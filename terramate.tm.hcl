@@ -13,12 +13,20 @@ terramate {
         TF_DATA_DIR = "${terramate.root.path.fs.absolute}${terramate.stack.path.absolute}/.terraform"
       }
     }
+    
+    experiments = ["outputs-sharing"]
   }
 }
 
 # Import global configuration
 import {
   source = "./config/globals.tm.hcl"
+}
+
+sharing_backend "default" {
+  type     = terraform
+  filename = "sharing_generated.tf"
+  command  = ["tofu", "output", "-json"]
 }
 
 # Generate provider configuration for all stacks

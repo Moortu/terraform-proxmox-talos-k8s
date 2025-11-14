@@ -7,6 +7,11 @@ stack {
   after = []
 }
 
+output "talos_iso_image_location" {
+  backend = "default"
+  value   = outputs.talos_iso_image_location.value
+}
+
 globals {
   environment = "production"
   stack_name  = "talos-iso"
