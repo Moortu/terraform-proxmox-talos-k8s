@@ -1,13 +1,30 @@
 .idea
 .development
-.terraform
+
+# Terraform files
+**/.terraform/
+**/.terraform.lock.hcl
+**/terraform.tfstate
+**/terraform.tfstate.backup
 *.tfstate*
-*.auto.tfvars
 *.tfplan
 *.tmp
-kubeconfig.y*
-generated/*
+**/*.tfvars
+*.auto.tfvars
+!**/*.tfvars.example
 
 # Terramate generated files
 **/*_generated*.tm.tf
+**/*_generated*.tf
+**/*_generated*.hcl
 **/*_sharing_generated.tm.tf
+**/generated/
+**/.terramate/
+**/**/.downloads
+
+# Project specific
+kubeconfig.y*
+
+# OS files
+.DS_Store
+Thumbs.db
