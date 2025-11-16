@@ -1,12 +1,19 @@
 version: v1alpha1
 cluster:
+  allowSchedulingOnControlPlanes: true
   network:
     cni:
       name: none
     dnsDomain: ${talos_k8s_cluster_domain}
   proxy:
     disabled: true
-  
+  extraManifests:
+    - https://raw.githubusercontent.com/kubernetes-sigs/gateway-api/v1.4.0/config/crd/standard/gateway.networking.k8s.io_gatewayclasses.yaml
+    - https://raw.githubusercontent.com/kubernetes-sigs/gateway-api/v1.4.0/config/crd/experimental/gateway.networking.k8s.io_gateways.yaml
+    - https://raw.githubusercontent.com/kubernetes-sigs/gateway-api/v1.4.0/config/crd/standard/gateway.networking.k8s.io_httproutes.yaml
+    - https://raw.githubusercontent.com/kubernetes-sigs/gateway-api/v1.4.0/config/crd/standard/gateway.networking.k8s.io_referencegrants.yaml
+    - https://raw.githubusercontent.com/kubernetes-sigs/gateway-api/v1.4.0/config/crd/standard/gateway.networking.k8s.io_grpcroutes.yaml
+    - https://raw.githubusercontent.com/kubernetes-sigs/gateway-api/v1.4.0/config/crd/experimental/gateway.networking.k8s.io_tlsroutes.yaml
 
 machine:
   install:
