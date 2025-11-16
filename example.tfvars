@@ -28,20 +28,8 @@ talos_network_dhcp       = false             # Set to true if using DHCP instead
 #######################################################################
 # Configure how the Talos ISO is stored and accessed in Proxmox
 
-# ISO Storage Strategy (choose one):
-# - true: Download ISO once to a central location (ideal with shared storage)
-# - false: Download ISO to each Proxmox node separately (for non-shared storage setups)
-central_iso_storage               = true
-
-# When central_iso_storage=true, specify which node will store the ISO
-# If left empty, the first node in proxmox_nodes will be used
-talos_iso_destination_server      = "pve-node-01"
-
 # Storage pool where the ISO will be stored (must exist on all nodes if central_iso_storage=false)
 talos_iso_destination_storage_pool = "local"
-
-download_method    = "remote"
-local_download_dir = ".downloads"
 
 #######################################################################
 # KUBERNETES CLUSTER CONFIGURATION
@@ -52,6 +40,13 @@ talos_k8s_cluster_domain       = "talos-cluster.local" # [REQUIRED] Domain for c
 talos_k8s_cluster_vip          = "192.168.1.100"       # [REQUIRED] Virtual IP for API server (must be in your network CIDR)
 talos_k8s_cluster_endpoint_port = 6443                 # Kubernetes API port (usually keep default)
 
+talos_k8s_cluster_vip_domain    = "talos-cluster.local"
+talos_name_servers = [
+  "your-dns-here"
+  "1.1.1.1",
+  "8.8.8.8" 
+]
+
 # Node IP address assignment
 control_plane_first_ip = 10   # First IP offset for control planes (from CIDR base)
                               # Example: With CIDR 192.168.1.0/24, first CP gets 192.168.1.10
@@ -59,7 +54,7 @@ worker_node_first_ip   = 100  # First IP offset for workers (from CIDR base)
                               # Example: With CIDR 192.168.1.0/24, first worker gets 192.168.1.100
 
 # Node naming and disk configuration
-talos_install_disk_device  = "/dev/vda"           # Disk device for Talos OS installation
+talos_install_disk_device  = "/dev/sda"           # Disk device for Talos OS installation
 control_plane_name_prefix = "talos-control-plane" # Prefix for control plane node names
 worker_node_name_prefix   = "talos-worker-node"   # Prefix for worker node names
 
@@ -77,12 +72,13 @@ proxmox_nodes = {
       node_labels = {  # Kubernetes labels to apply to the node
         role = "control-plane"
       }
+      taints_enabled         = "false"
       # Network and hardware configuration
       network_bridge         = "vmbr0"    # [REQUIRED] Proxmox network bridge
       mac_address            = ""         # Optional: Set fixed MAC address
-      cpu_cores              = 2          # CPU cores for this VM
-      memory                 = 4          # Memory in GB for this VM
-      boot_disk_size         = 20         # Boot disk size in GB
+      cpu_cores              = 4          # CPU cores for this VM
+      memory                 = 10          # Memory in GB for this VM
+      boot_disk_size         = 8         # Boot disk size in GB
       boot_disk_storage_pool = "local-lvm" # [REQUIRED] Proxmox storage pool for VM disks
     }]
     workers = []  # No worker VMs on this node
@@ -94,10 +90,11 @@ proxmox_nodes = {
       node_labels = {
         role = "control-plane"
       }
+      taints_enabled         = "false"
       network_bridge         = "vmbr0"
-      cpu_cores              = 2
-      memory                 = 4
-      boot_disk_size         = 20
+      cpu_cores              = 4
+      memory                 = 10
+      boot_disk_size         = 8
       boot_disk_storage_pool = "local-lvm"
     }],
     workers = [{  # Worker nodes on this Proxmox node
