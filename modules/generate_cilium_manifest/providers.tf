@@ -3,8 +3,5 @@ terraform {
     helm = {
       source = "opentofu/helm"
     }
-    kubernetes = {
-      source = "opentofu/kubernetes"
-    }
   }
 }

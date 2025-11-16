@@ -14,9 +14,10 @@
 !**/*.tfvars.example
 
 # Terramate generated files
-**/*_generated*.tm.tf
-**/*_generated*.tf
-**/*_generated*.hcl
+**/**/*_*.tm.tf
+**/*_*.tm.tf
+**/*_*.tf
+**/*_*.hcl
 **/*_sharing_generated.tm.tf
 **/generated/
 **/.terramate/

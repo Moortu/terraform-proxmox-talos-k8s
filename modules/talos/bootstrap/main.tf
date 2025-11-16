@@ -12,7 +12,12 @@ terraform {
   }
 }
 
+resource "time_sleep" "wait_before_bootstrap" {
+  create_duration = "20s"
+}
+
 resource "talos_machine_bootstrap" "this" {
+  depends_on = [time_sleep.wait_before_bootstrap]
   client_configuration = var.client_configuration
   node                 = var.control_plane_nodes[0].ip
 }

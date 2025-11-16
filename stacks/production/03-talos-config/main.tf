@@ -8,6 +8,7 @@ provider "talos" {
 locals {
   talos_k8s_cluster_endpoint = "https://api.${var.talos_k8s_cluster_vip_domain}:${var.talos_k8s_cluster_endpoint_port}"
   control_plane_ip_addresses = [for cp in data.terraform_remote_state.vms.outputs.talos_control_plane_vms_network : cp.ip]
+  network_ip_prefix          = tonumber(element(split("/", var.talos_network_cidr), 1))
 }
 
 # ============================================================================
@@ -39,6 +40,7 @@ module "cilium" {
   cilium_version = var.cilium_version  
   use_kube_proxy = var.use_kube_proxy     
   k8s_version = var.k8s_version
+  enable_bpf_masquerade = true
 }
 
 # ============================================================================
@@ -78,7 +80,7 @@ module "talos_config_cp" {
   talos_name_servers              = var.talos_name_servers
   k8s_version                     = var.k8s_version
   talos_install_disk_device       = var.talos_install_disk_device
-  talos_install_image_url         = var.talos_install_image_url != "" ? var.talos_install_image_url : data.terraform_remote_state.iso.outputs.talos_installer_image_url
+  talos_install_image_url         = var.talos_install_image_url != "" ? var.talos_install_image_url : try(data.terraform_remote_state.iso.outputs.talos_installer_image_url, "")
   talos_control_plane_vms_network = data.terraform_remote_state.vms.outputs.talos_control_plane_vms_network
   talos_k8s_cluster_domain        = var.talos_k8s_cluster_domain
   
@@ -109,9 +111,136 @@ module "talos_config_worker" {
   talos_name_servers              = var.talos_name_servers
   k8s_version                     = var.k8s_version
   talos_install_disk_device       = var.talos_install_disk_device
-  talos_install_image_url         = var.talos_install_image_url != "" ? var.talos_install_image_url : data.terraform_remote_state.iso.outputs.talos_installer_image_url
+  talos_install_image_url         = var.talos_install_image_url != "" ? var.talos_install_image_url : try(data.terraform_remote_state.iso.outputs.talos_installer_image_url, "")
   talos_control_plane_vms_network = data.terraform_remote_state.vms.outputs.talos_control_plane_vms_network
   talos_k8s_cluster_domain        = var.talos_k8s_cluster_domain
   
   include_cilium = false
+}
+
+# ============================================================================
+# Render per-node Talos configs in this stack for convenience
+# ============================================================================
+
+# Control-plane nodes
+data "talos_machine_configuration" "cp_node" {
+  for_each = { for n in data.terraform_remote_state.vms.outputs.talos_control_plane_vms_network : n.vm_name => n }
+
+  machine_type       = "controlplane"
+  machine_secrets    = module.talos_secrets.machine_secrets
+  cluster_name       = var.talos_k8s_cluster_name
+  cluster_endpoint   = local.talos_k8s_cluster_endpoint
+  talos_version      = "v${var.talos_version}"
+  kubernetes_version = "v${var.k8s_version}"
+  docs               = false
+  examples           = false
+
+  config_patches = concat([
+    yamlencode({
+      cluster = {
+        network = {
+          cni       = { name = "none" }
+          dnsDomain = var.talos_k8s_cluster_domain
+        }
+        proxy = { disabled = true }
+      }
+      machine = {
+        install = {
+          disk       = var.talos_install_disk_device
+          image      = var.talos_install_image_url != "" ? var.talos_install_image_url : try(data.terraform_remote_state.iso.outputs.talos_installer_image_url, "")
+          bootloader = true
+          wipe       = false
+        }
+        network = {
+          nameservers = var.talos_name_servers
+          interfaces = [
+            {
+              interface = each.value.network_interface_name
+              dhcp      = false
+              addresses = ["${each.value.ip}/${local.network_ip_prefix}"]
+              routes    = [{ network = "0.0.0.0/0", gateway = var.talos_network_gateway }]
+              vip       = { ip = var.talos_k8s_cluster_vip }
+            }
+          ]
+        }
+        features = {
+          kubePrism = { enabled = true, port = 7445 }
+          hostDNS   = { forwardKubeDNSToHost = false }
+        }
+      }
+    })
+  ], var.include_cilium_inline_manifests && length(module.cilium) > 0 ? [
+    yamlencode({
+      cluster = {
+        inlineManifests = [{ name = "cilium", contents = module.cilium[0].cilium_manifests }]
+      }
+    })
+  ] : [])
+}
+
+resource "local_sensitive_file" "cp_node_config" {
+  for_each = data.talos_machine_configuration.cp_node
+
+  filename             = "${path.root}/generated/node-configs/${each.key}.yaml"
+  directory_permission = "0700"
+  file_permission      = "0700"
+  content              = each.value.machine_configuration
+}
+
+# Worker nodes
+data "talos_machine_configuration" "worker_node" {
+  for_each = { for n in data.terraform_remote_state.vms.outputs.talos_worker_network : n.vm_name => n }
+
+  machine_type       = "worker"
+  machine_secrets    = module.talos_secrets.machine_secrets
+  cluster_name       = var.talos_k8s_cluster_name
+  cluster_endpoint   = local.talos_k8s_cluster_endpoint
+  talos_version      = "v${var.talos_version}"
+  kubernetes_version = "v${var.k8s_version}"
+  docs               = false
+  examples           = false
+
+  config_patches = [
+    yamlencode({
+      cluster = {
+        network = {
+          cni       = { name = "none" }
+          dnsDomain = var.talos_k8s_cluster_domain
+        }
+        proxy = { disabled = true }
+      }
+      machine = {
+        install = {
+          disk       = var.talos_install_disk_device
+          image      = var.talos_install_image_url != "" ? var.talos_install_image_url : try(data.terraform_remote_state.iso.outputs.talos_installer_image_url, "")
+          bootloader = true
+          wipe       = false
+        }
+        network = {
+          nameservers = var.talos_name_servers
+          interfaces = [
+            {
+              interface = each.value.network_interface_name
+              dhcp      = false
+              addresses = ["${each.value.ip}/${local.network_ip_prefix}"]
+              routes    = [{ network = "0.0.0.0/0", gateway = var.talos_network_gateway }]
+            }
+          ]
+        }
+        features = {
+          kubePrism = { enabled = true, port = 7445 }
+          hostDNS   = { forwardKubeDNSToHost = false }
+        }
+      }
+    })
+  ]
+}
+
+resource "local_sensitive_file" "worker_node_config" {
+  for_each = data.talos_machine_configuration.worker_node
+
+  filename             = "${path.root}/generated/node-configs/${each.key}.yaml"
+  directory_permission = "0700"
+  file_permission      = "0700"
+  content              = each.value.machine_configuration
 }

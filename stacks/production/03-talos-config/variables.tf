@@ -41,7 +41,7 @@ variable "talos_name_servers" {
 
 variable "talos_install_disk_device" {
   type    = string
-  default = "/dev/vda"
+  default = "/dev/vda"  # VirtIO SCSI disk (virtio0 interface)
 }
 
 variable "talos_install_image_url" {
@@ -69,4 +69,9 @@ variable "use_kube_proxy" {
 variable "include_cilium_inline_manifests" {
   type    = bool
   default = true
+}
+
+variable "talos_network_cidr" {
+  type        = string
+  description = "Cluster nodes CIDR, used to derive IP prefix for node configs (e.g., 10.0.10.0/24)"
 }

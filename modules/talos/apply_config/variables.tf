@@ -50,9 +50,3 @@ variable "cluster_vip" {
   description = "Cluster VIP"
   type        = string
 }
-
-variable "config_template_path" {
-  description = "Path to config template"
-  type        = string
-  default     = "modules/talos-config-templates"
-}

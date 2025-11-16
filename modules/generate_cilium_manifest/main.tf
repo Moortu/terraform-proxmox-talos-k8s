@@ -1,26 +1,32 @@
-# Generate cilium manifests using helm template
-# This doesn't require a connection to the Kubernetes cluster
+# Generate Cilium manifests using helm template
+# Following Talos best practices: https://docs.siderolabs.com/kubernetes-guides/cni/deploying-cilium
+# These manifests should be used as inlineManifests in Talos machine configuration
+#
+# DNS CONFIGURATION - Choose one solution:
+#
+# Solution 2 (DEFAULT): enable_bpf_masquerade = false
+#   - Cilium: bpf.masquerade=false (uses iptables)
+#   - Talos: forwardKubeDNSToHost=true (default, keep DNS caching)
+#
+# Solution 1 (ADVANCED): enable_bpf_masquerade = true
+#   - Cilium: bpf.masquerade=true (better performance)
+#   - Talos: forwardKubeDNSToHost=false (REQUIRED in machine config)
+#
+# See: https://github.com/siderolabs/talos/pull/9200
+#      https://github.com/cilium/cilium/issues/36761
+
 locals {
-  cilium_values = {
-    # Core configuration for Talos with kube-proxy replacement
-    kubeProxyReplacement = "true"
-    k8sServiceHost = "localhost"
-    k8sServicePort = "7445"
-    
-    # IPAM configuration
+  # Build values based on kube-proxy configuration
+  base_values = {
+    # IPAM mode must be kubernetes for Talos
     ipam = {
       mode = "kubernetes"
-    }
-    
-    # Network masquerading configuration
-    bpf = {
-      masquerade = true
     }
     
     # Required security context capabilities for Talos
     securityContext = {
       capabilities = {
-        ciliumAgent = ["CHOWN", "KILL", "NET_ADMIN", "NET_RAW", "IPC_LOCK", "SYS_ADMIN", "SYS_RESOURCE", "DAC_OVERRIDE", "FOWNER", "SETGID", "SETUID"]
+        ciliumAgent      = ["CHOWN", "KILL", "NET_ADMIN", "NET_RAW", "IPC_LOCK", "SYS_ADMIN", "SYS_RESOURCE", "DAC_OVERRIDE", "FOWNER", "SETGID", "SETUID"]
         cleanCiliumState = ["NET_ADMIN", "SYS_ADMIN", "SYS_RESOURCE"]
       }
     }
@@ -33,42 +39,42 @@ locals {
       hostRoot = "/sys/fs/cgroup"
     }
     
-    # Gateway API configuration
-    gatewayAPI = {
-      enabled = true
-      enableAlpn = true
-      enableAppProtocol = true
+    # BPF masquerading configuration
+    # Solution 2 (default): bpf.masquerade=false to avoid DNS issues
+    # Solution 1 (optional): bpf.masquerade=true requires forwardKubeDNSToHost=false in Talos
+    # See: https://github.com/siderolabs/talos/pull/9200
+    #      https://github.com/cilium/cilium/issues/36761
+    bpf = {
+      masquerade = var.enable_bpf_masquerade
     }
   }
-  
+
+  # Additional values when kube-proxy replacement is enabled
+  kubeproxy_replacement_values = var.use_kube_proxy ? {} : {
+    kubeProxyReplacement = "true"
+    k8sServiceHost       = "localhost"
+    k8sServicePort       = "7445"
+  }
+
+  # Merge all values
+  cilium_values = merge(
+    local.base_values,
+    local.kubeproxy_replacement_values
+  )
 }
 
-
-# Template the helm chart locally
+# Template the helm chart locally (no cluster connection needed)
 data "helm_template" "cilium" {
   name       = "cilium"
   repository = "https://helm.cilium.io"
   chart      = "cilium"
   version    = var.cilium_version
-  namespace = "kube-system"
+  namespace  = "kube-system"
   
-  # Use values directly instead of dynamic sets
   values = [
     yamlencode(local.cilium_values)
   ]
   
-  # Specify appropriate Kubernetes version - needs to be >=1.21.0
+  # Specify appropriate Kubernetes version
   kube_version = var.k8s_version
-}
-
-# Output the Cilium manifest to a file
-resource "local_file" "cilium_manifest" {
-  filename = "${path.root}/generated/cilium-manifest.yaml"
-  content  = "${data.helm_template.cilium.manifest}"
-
-  # Create the generated directory if it doesn't exist
-  provisioner "local-exec" {
-    command = "New-Item -Path '${dirname(self.filename)}' -ItemType Directory -Force"
-    interpreter = ["PowerShell", "-Command"]
-  }
 }

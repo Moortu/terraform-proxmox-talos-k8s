@@ -16,7 +16,7 @@ resource "talos_machine_configuration_apply" "this" {
   endpoint = each.value.ip
 
   config_patches = [
-    templatefile("${path.root}/${var.config_template_path}/${each.value.type == "control" ? "control-plane" : "worker-node"}.yaml.tftpl", {
+    templatefile("${path.module}/templates/${each.value.type == "control_plane" ? "control-plane" : "worker-node"}.yaml.tftpl", {
       topology_zone     = each.value.node_name
       cluster_domain    = var.cluster_domain
       cluster_endpoint  = var.cluster_endpoint

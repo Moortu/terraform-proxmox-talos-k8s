@@ -1,22 +1,41 @@
+# New structured inputs (preferred)
+variable "versions" {
+  description = "Version configuration object"
+  type = object({
+    talos = optional(string)
+  })
+  default = null
+}
+
+variable "iso" {
+  description = "ISO configuration object"
+  type = object({
+    arch         = optional(string)
+    storage_pool = optional(string)
+  })
+  default = null
+}
+
+# Legacy scalar inputs (fallback)
 variable "talos_version" {
-  description = "Talos version to use"
-  # https://github.com/siderolabs/talos/releases
-  type        = string
-  default     = "1.11.5"
+    description = "Talos version to use"
+    # https://github.com/siderolabs/talos/releases
+    type        = string
+    default     = "1.11.5"
 }
 
 variable "talos_architecture" {
-  description = "CPU architecture for Talos image (amd64 or arm64)"
-  type        = string
-  default     = "amd64"
+    description = "CPU architecture for Talos image (amd64 or arm64)"
+    type        = string
+    default     = "amd64"
 }
-
 
 variable "talos_iso_destination_storage_pool" {
   description = "Proxmox storage to store the Talos iso or raw image on"
   type        = string
   default     = "local"
 }
+
 
 variable "proxmox_nodes" {
   description = "Proxmox servers on which the talos cluster will be deployed"
@@ -60,4 +79,3 @@ variable "proxmox_nodes" {
     })))
   }))
 }
-

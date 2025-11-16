@@ -1,5 +1,5 @@
 // TERRAMATE: GENERATED AUTOMATICALLY DO NOT EDIT
 
-output "talos_iso_image_location_output" {
-  value = local.talos_iso_path
+output "talos_disk_image_file_ids" {
+  value = module.talos_image.talos_disk_image_file_ids
 }

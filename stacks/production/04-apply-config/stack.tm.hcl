@@ -1,21 +1,15 @@
 stack {
-  name        = "talos-setup"
-  description = "Download Talos files and prepare Proxmox"
-  id          = "talos-setup"
-  tags        = ["talos"]
-  
-  after = []
-}
+  name        = "apply-config"
+  description = "Apply Talos machine configurations to control planes and workers"
+  id          = "prod-apply-config"
 
-
-output "talos_disk_image_file_ids" {
-  backend = "default"
-  value   = module.talos_image.talos_disk_image_file_ids
+  after = ["tag:talos-config"]
+  tags  = ["apply-config"]
 }
 
 globals {
   environment = "production"
-  stack_name  = "talos-setup"
+  stack_name  = "apply-config"
 }
 
 terramate {

@@ -9,11 +9,13 @@ output "client_configuration" {
 }
 
 output "talos_config_cp" {
-  value = module.talos_config_cp.machine_configuration
+  value     = module.talos_config_cp.machine_configuration
+  sensitive = true
 }
 
 output "talos_config_worker" {
-  value = module.talos_config_worker.machine_configuration
+  value     = module.talos_config_worker.machine_configuration
+  sensitive = true
 }
 
 output "cilium_manifests" {

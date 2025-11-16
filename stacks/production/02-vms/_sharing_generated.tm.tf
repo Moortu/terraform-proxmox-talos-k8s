@@ -1,5 +1,5 @@
 // TERRAMATE: GENERATED AUTOMATICALLY DO NOT EDIT
 
-variable "talos_iso_image_location" {
+variable "talos_disk_image_locations" {
   type = any
 }
