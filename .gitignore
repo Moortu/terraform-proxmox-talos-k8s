@@ -9,7 +9,6 @@
 *.tfstate*
 *.tfplan
 *.tmp
-**/*.tfvars
 *.auto.tfvars
 !**/*.tfvars.example
 
@@ -17,7 +16,6 @@
 **/**/*_*.tm.tf
 **/*_*.tm.tf
 **/*_*.tf
-**/*_*.hcl
 **/*_sharing_generated.tm.tf
 **/generated/
 **/.terramate/

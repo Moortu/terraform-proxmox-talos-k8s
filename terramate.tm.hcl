@@ -28,11 +28,26 @@ import {
 
 sharing_backend "default" {
   type     = terraform
-  filename = "_sharing_generated.tm.tf"
+  filename = "_generated_shared.tm.tf"
   command  = ["tofu", "output", "-json"]
 }
 
 # Import provider generation configuration
 import {
   source = "./config/generate_providers.tm.hcl"
+}
+
+# Import common variables generation configuration
+import {
+  source = "./config/generate_common_vars.tm.hcl"
+}
+
+# Import proxmox_nodes variable generation configuration
+import {
+  source = "./config/generate_proxmox_nodes_var.tm.hcl"
+}
+
+# Import TF_CLI_ARGS generation configuration
+import {
+  source = "./config/generate_tfvars_args.tm.hcl"
 }

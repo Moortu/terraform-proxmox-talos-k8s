@@ -2,13 +2,19 @@
 
 Automated deployment of a production-ready Talos Linux Kubernetes cluster on Proxmox using Terraform/OpenTofu and Terramate.
 
+With this project I had a few goals:
+- Simplicity: You can checkout the project and run it and you'll have a working cluster in a matter of minutes
+- Configurable: I use sane defaults so you can just run the script, but at the same time you can configure it to your needs to a pretty good degree
+- Bare minimum: In this project I have not included any apps that will run on the cluster, it's just a bare cluster setup
+- GitOps ready: I use Terramate for stack orchestration and support both FluxCD and ArgoCD for GitOps workflows so after the cluster is up and running you can use GitOps to start configuring and installing
+
 ## 🎯 Overview
 
 This project provides a modular, GitOps-ready infrastructure-as-code solution for deploying Talos Kubernetes clusters on Proxmox Virtual Environment. It uses Terramate for stack orchestration and supports both FluxCD and ArgoCD for GitOps workflows.
 
 ### Key Features
 
-- **🚀 Automated Deployment**: Complete cluster setup from ISO download to bootstrapped Kubernetes
+- **🚀 Automated Deployment**: Complete cluster setup from image download to bootstrapped Kubernetes
 - **🔄 Modular Architecture**: Reusable Terraform modules for flexible configurations
 - **📦 Stack-Based Workflow**: Ordered deployment stages managed by Terramate
 - **🌐 High Availability**: Multi-node control plane with virtual IP (VIP) support
@@ -157,7 +163,7 @@ This initializes all stacks and downloads required providers.
 
 ### 5. Deploy the Cluster
 
-Deploy the core infrastructure (ISO, VMs, and Talos configuration):
+Deploy the core infrastructure (img, VMs, and Talos configuration):
 
 ```bash
 make apply
