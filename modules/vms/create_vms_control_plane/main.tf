@@ -47,7 +47,7 @@ module "vms" {
   }
 
   iso = {
-    image_location = var.talos_iso_image_location
+    image_location = var.talos_image_location
   }
 
   proxmox_nodes = var.proxmox_nodes

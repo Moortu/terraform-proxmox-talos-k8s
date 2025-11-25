@@ -18,20 +18,20 @@ variable "iso" {
 
 # Legacy scalar inputs (fallback)
 variable "talos_version" {
-    description = "Talos version to use"
-    # https://github.com/siderolabs/talos/releases
-    type        = string
-    default     = "1.11.5"
+  description = "Talos version to use"
+  # https://github.com/siderolabs/talos/releases
+  type        = string
+  default     = "1.11.5"
 }
 
 variable "talos_architecture" {
-    description = "CPU architecture for Talos image (amd64 or arm64)"
-    type        = string
-    default     = "amd64"
+  description = "CPU architecture for Talos ISO (amd64 or arm64)"
+  type        = string
+  default     = "amd64"
 }
 
 variable "talos_image_destination_storage_pool" {
-  description = "Proxmox storage to store the Talos image (qcow2) on"
+  description = "Proxmox storage to store the Talos installer ISO on"
   type        = string
   default     = "local"
 }

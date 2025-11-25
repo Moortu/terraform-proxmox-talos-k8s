@@ -7,8 +7,8 @@ variable "talos_architecture" {
   default     = "amd64"
 }
 
-variable "talos_iso_destination_storage_pool" {
-  description = "Proxmox storage to store the Talos iso or raw image on"
+variable "talos_image_destination_storage_pool" {
+  description = "Proxmox storage to store the Talos image (qcow2) on"
   type        = string
   default     = "local"
 }

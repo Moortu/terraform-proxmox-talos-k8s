@@ -22,10 +22,10 @@ data "terraform_remote_state" "vms" {
   }
 }
 
-data "terraform_remote_state" "iso" {
+data "terraform_remote_state" "image" {
   backend = "local"
   config = {
-    path = "../01-talos-iso/terraform.tfstate"
+    path = "../01-talos-image/terraform.tfstate"
   }
 }
 
@@ -80,7 +80,7 @@ module "talos_config_cp" {
   talos_name_servers              = var.talos_name_servers
   k8s_version                     = var.k8s_version
   talos_install_disk_device       = var.talos_install_disk_device
-  talos_install_image_url         = var.talos_install_image_url != "" ? var.talos_install_image_url : try(data.terraform_remote_state.iso.outputs.talos_installer_image_url, "")
+  talos_install_image_url         = var.talos_install_image_url != "" ? var.talos_install_image_url : try(data.terraform_remote_state.image.outputs.talos_installer_image_url, "")
   talos_control_plane_vms_network = data.terraform_remote_state.vms.outputs.talos_control_plane_vms_network
   talos_k8s_cluster_domain        = var.talos_k8s_cluster_domain
   
@@ -111,7 +111,7 @@ module "talos_config_worker" {
   talos_name_servers              = var.talos_name_servers
   k8s_version                     = var.k8s_version
   talos_install_disk_device       = var.talos_install_disk_device
-  talos_install_image_url         = var.talos_install_image_url != "" ? var.talos_install_image_url : try(data.terraform_remote_state.iso.outputs.talos_installer_image_url, "")
+  talos_install_image_url         = var.talos_install_image_url != "" ? var.talos_install_image_url : try(data.terraform_remote_state.image.outputs.talos_installer_image_url, "")
   talos_control_plane_vms_network = data.terraform_remote_state.vms.outputs.talos_control_plane_vms_network
   talos_k8s_cluster_domain        = var.talos_k8s_cluster_domain
   
@@ -147,7 +147,7 @@ data "talos_machine_configuration" "cp_node" {
       machine = {
         install = {
           disk       = var.talos_install_disk_device
-          image      = var.talos_install_image_url != "" ? var.talos_install_image_url : try(data.terraform_remote_state.iso.outputs.talos_installer_image_url, "")
+          image      = var.talos_install_image_url != "" ? var.talos_install_image_url : try(data.terraform_remote_state.image.outputs.talos_installer_image_url, "")
           bootloader = true
           wipe       = false
         }
@@ -212,7 +212,7 @@ data "talos_machine_configuration" "worker_node" {
       machine = {
         install = {
           disk       = var.talos_install_disk_device
-          image      = var.talos_install_image_url != "" ? var.talos_install_image_url : try(data.terraform_remote_state.iso.outputs.talos_installer_image_url, "")
+          image      = var.talos_install_image_url != "" ? var.talos_install_image_url : try(data.terraform_remote_state.image.outputs.talos_installer_image_url, "")
           bootloader = true
           wipe       = false
         }

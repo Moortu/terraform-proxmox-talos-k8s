@@ -24,7 +24,7 @@ module "control_plane_vms" {
   talos_network_dhcp        = var.talos_network_dhcp
   talos_network_cidr        = var.talos_network_cidr
   talos_network_gateway     = var.talos_network_gateway
-  talos_iso_image_location  = ""  # Using disk images instead
+  talos_image_location      = ""  # Using disk images instead
   control_plane_name_prefix = var.control_plane_name_prefix
 
   # Image-based boot support
@@ -50,7 +50,7 @@ module "workers_vms" {
   talos_network_dhcp        = var.talos_network_dhcp
   talos_network_cidr        = var.talos_network_cidr
   talos_network_gateway     = var.talos_network_gateway
-  talos_iso_image_location  = ""  # Using disk images instead
+  talos_image_location      = ""  # Using disk images instead
   worker_node_name_prefix   = var.worker_node_name_prefix
 
   # Image-based boot support

@@ -71,7 +71,7 @@ variable "talos_network_gateway" {
   default = "10.0.0.1"
 }
 
-variable "talos_iso_image_location" {
+variable "talos_image_location" {
   type    = string
   default = null
 }

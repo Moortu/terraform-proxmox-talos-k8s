@@ -170,7 +170,7 @@ make apply
 ```
 
 This runs the first three deployment stages:
-- **01-talos-iso**: Downloads and uploads Talos ISO to Proxmox
+- **01-talos-image**: Downloads and uploads Talos image to Proxmox
 - **02-vms**: Creates control plane and worker VMs
 - **03-talos-config**: Generates Talos machine configurations
 
@@ -300,10 +300,10 @@ talos_name_servers = [
 ]
 ```
 
-#### ISO Storage
+#### Image Storage
 
 ```hcl
-talos_iso_destination_storage_pool = "local"  # Storage pool for Talos ISO
+talos_image_destination_storage_pool = "local"  # Storage pool for Talos image
 ```
 
 #### Talos Installation Disk
@@ -331,7 +331,7 @@ The project uses Terramate to orchestrate deployment in ordered stages:
 
 | Stage | Directory | Description | Tag |
 |-------|-----------|-------------|-----|
-| 1 | `01-talos-iso` | Downloads Talos ISO and uploads to Proxmox | `iso` |
+| 1 | `01-talos-image` | Downloads Talos image and uploads to Proxmox | `iso` |
 | 2 | `02-vms` | Creates control plane and worker VMs | `vms` |
 | 3 | `03-talos-config` | Generates Talos machine configurations | `talos-config` |
 | 4 | `04-apply-config` | Applies configurations to Talos nodes | `apply-config` |
@@ -409,7 +409,7 @@ terramate run --enable-sharing --tags iso --tags vms -- tofu plan
 terramate run --reverse --enable-sharing -- tofu destroy
 
 # Run on specific stack
-cd stacks/production/01-talos-iso
+cd stacks/production/01-talos-image
 tofu apply
 ```
 

@@ -24,12 +24,12 @@ talos_network_gateway    = "192.168.1.1"     # [REQUIRED] Gateway IP (your route
 talos_network_dhcp       = false             # Set to true if using DHCP instead of static IPs
 
 #######################################################################
-# TALOS ISO CONFIGURATION
+# TALOS IMAGE CONFIGURATION
 #######################################################################
-# Configure how the Talos ISO is stored and accessed in Proxmox
+# Configure how the Talos image is stored and accessed in Proxmox
 
-# Storage pool where the ISO will be stored (must exist on all nodes if central_iso_storage=false)
-talos_iso_destination_storage_pool = "local"
+# Storage pool where the Talos image will be stored (must exist on all nodes if central storage is shared)
+talos_image_destination_storage_pool = "local"
 
 #######################################################################
 # KUBERNETES CLUSTER CONFIGURATION

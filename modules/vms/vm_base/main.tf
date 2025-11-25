@@ -17,7 +17,7 @@ locals {
   dhcp    = try(var.network.dhcp, var.talos_network_dhcp)
   cidr    = try(var.network.cidr, var.talos_network_cidr)
   gateway = try(var.network.gateway, var.talos_network_gateway)
-  iso_loc = try(var.iso.image_location, var.talos_iso_image_location)
+  iso_loc = try(var.iso.image_location, var.talos_image_location)
 
   # VM type tag
   vm_type_tag = var.vm_type == "control_plane" ? "controller" : "worker"
@@ -99,7 +99,7 @@ resource "proxmox_virtual_environment_vm" "vm" {
     content {
       interface    = "scsi0"
       datastore_id = each.value.boot_disk_storage_pool
-      file_format  = "raw"
+      file_format  = "qcow2"
       import_from  = lookup(var.disk_image_locations, each.value.node_name)
       discard      = "on"
       backup       = false

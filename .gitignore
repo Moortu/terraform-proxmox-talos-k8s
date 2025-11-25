@@ -17,6 +17,7 @@
 **/*_*.tm.tf
 **/*_*.tf
 **/*_sharing_generated.tm.tf
+**/*_generated_*.tm.hcl
 **/generated/
 **/.terramate/
 **/**/.downloads
